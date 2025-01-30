@@ -1,0 +1,64 @@
+- name: main_screen
+  legend:
+    'T':
+      image: tree
+      color: green
+    '.':
+      image: waves
+      color: white
+      passable: true
+    '*':
+      image: rock
+      color: red
+    'x':
+      image: stone
+      color: white
+    '#':
+      image: bricks
+      color: red
+      passable: true
+    'O':
+      image: pool
+      color: blue
+    '7':
+      image: shore_north_west
+      color: blue
+    '8':
+      image: shore_north
+      color: blue
+    '9':
+      image: shore_north_east
+      color: blue
+    '4':
+      image: shore_west
+      color: blue
+    '6':
+      image: shore_east
+      color: blue
+    '1':
+      image: shore_south_west
+      color: blue
+    '2':
+      image: shore_south
+      color: blue
+    '3':
+      image: shore_south_east
+      color: blue
+    '-':
+      image: solid
+      color: blue
+  bg0: yellow
+  bg1: brown
+  bg2: black
+  data: |
+    ...#........TTT#...
+    .xx#.....*..TTT#xx.
+    .x.#....*.*..T.#.x.
+    ...##.#.#.#.#.##...
+    ..*#.#.##T##.#.#*..
+    .*.#####TOT#####.*.
+    ..*#.#.##T##.#.#*..
+    ...##.#.#.#.#.##...
+    .x.#789.*.*....#.x.
+    .xx#4-6..*.....#xx.
+    ...#123........#...
