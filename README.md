@@ -64,6 +64,16 @@ Be aware that llvm-mos does extensive link-time-optimizations, which is great
 for code efficiency, but also means that functions may be completely optimized
 away or inlined and thus have no symbols.
 
+### Graphics Resources
+
+Graphics are edited using the awesome [PETSCII Editor](http://petscii.krissz.hu/),
+then exported in a text formats that can be easily parsed by a python script
+(the exact format depends on the resource). You can open the "game.pe" file on
+this web app to see them.
+
+I'd prefer to extract the resources directly from the "game.pe" file, but it
+appears to be some sort of binary encoding.
+
 ## TODO
 
 While the game is certainly playable right now, there are many things I would
