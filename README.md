@@ -39,7 +39,7 @@ cmake .. -G Ninja
 ```
 
 It is possible to enable debugging output where the border color will change
-depending on what the program is doing by passing `-DDEBUG=ON` to `cmake`
+depending on what the program is doing by passing `-DDEBUG_MODE=ON` to `cmake`
 
 ### Compiling
 
