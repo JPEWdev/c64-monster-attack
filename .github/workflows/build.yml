@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  LLVM_MOS_VERSION: 21.0.1
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          python3 \
+          python3-yaml \
+          vice \
+          wget
+
+    - name: Setup llvm-mos
+      run: |
+        set -e
+        wget https://github.com/llvm-mos/llvm-mos-sdk/releases/download/v${LLVM_MOS_VERSION}/llvm-mos-linux.tar.xz
+        sudo mkdir -p /usr/local
+        sudo tar -C /usr/local -xvf llvm-mos-linux.tar.xz
+
+    - name: Configure CMake
+      run: |
+        PATH=/usr/local/llvm-mos/bin:$PATH
+        cmake -B ${{github.workspace}}/build -G Ninja
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build
+
+    - name: Archive Disk Image
+      uses: actions/upload-artifact@v4
+      with:
+        name: disk-image
+        path: build/monster-attack.d64
+
