@@ -21,7 +21,7 @@ endif()
 
 option(DEBUG_MODE "Enable visual debug mode" OFF)
 
-project(monster-attack)
+project(monster-attack VERSION 0.0.1)
 enable_language(C ASM)
 set(D64_PROG_NAME "ma")
 
@@ -114,6 +114,7 @@ add_executable(${CMAKE_PROJECT_NAME}.prg ${SOURCES})
 if (DEBUG_MODE)
     target_compile_definitions(${CMAKE_PROJECT_NAME}.prg PRIVATE DEBUG=1)
 endif()
+target_compile_definitions(${CMAKE_PROJECT_NAME}.prg PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 target_compile_options(${CMAKE_PROJECT_NAME}.prg PRIVATE -Wall -Werror)
 target_include_directories(${CMAKE_PROJECT_NAME}.prg PRIVATE src)
 
