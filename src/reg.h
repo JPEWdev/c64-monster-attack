@@ -11,6 +11,7 @@
 
 typedef void (*isr_proc)(void);
 #define ISR_ADDR (*((isr_proc volatile *)0xFFFE))
+#define ISR_VECTOR (*((isr_proc volatile *)0x0314))
 
 #define PROCESSOR_DDR REG(0x0000)
 #define MEMORY_MASK (0x07)

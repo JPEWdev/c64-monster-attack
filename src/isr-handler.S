@@ -9,13 +9,8 @@ temp_collision:
     .byte 0
 
 isr_handler:
-    php
-    pha
-    tya
-    pha
 #ifdef DEBUG
-    lda VIC_BORDERCOLOR
-    pha
+    ldx VIC_BORDERCOLOR
     lda #3
     sta VIC_BORDERCOLOR
 #endif
@@ -83,12 +78,16 @@ skip_sword_collisions:
 skip_player_collisions:
 
 #ifdef DEBUG
-    pla
-    sta VIC_BORDERCOLOR
+    stx VIC_BORDERCOLOR
 #endif
 
+    ; The KERNAL ISR pushes these, so we must pop them off to call RTI
     pla
     tay
+
     pla
-    plp
+    tax
+
+    pla
+
     rti

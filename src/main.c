@@ -280,12 +280,8 @@ int main() {
 
     disable_interrupts();
 
-    // Setup memory map. Hide basic, kernal, and charmap, keep I/O
-    PROCESSOR_PORT = (PROCESSOR_PORT & ~MEMORY_MASK) |
-                     (MEMORY_BASIC_OFF_KERNAL_OFF | _BV(MEMORY_IO_BIT));
-
     // Configure interrupts
-    ISR_ADDR = isr_handler;
+    ISR_VECTOR = isr_handler;
 
     prepare_status_int();
 
