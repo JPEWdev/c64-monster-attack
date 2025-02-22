@@ -3,7 +3,8 @@
  */
 #include "player-sprite.h"
 
-#include "color.h"
+#include <cbm.h>
+
 #include "sprite.h"
 #include "util.h"
 

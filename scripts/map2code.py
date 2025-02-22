@@ -24,18 +24,18 @@ COLORS = [
     "white",
     "red",
     "cyan",
-    "violet",
+    "purple",
     "green",
     "blue",
     "yellow",
     "orange",
     "brown",
-    "light_red",
-    "dark_grey",
-    "grey",
-    "light_green",
-    "light_blue",
-    "light_grey",
+    "lightred",
+    "gray1",
+    "gray2",
+    "lightgreen",
+    "lightblue",
+    "gray3",
 ]
 
 
@@ -72,7 +72,7 @@ def main():
         f.write(
             textwrap.dedent(
                 """\
-                #include "color.h"
+                #include <cbm.h>
                 #include "map.h"
 
                 """

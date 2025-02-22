@@ -85,6 +85,3 @@ still like to add:
     health, etc.)
  4. Other enemies
  5. Skeleton AI should respect impassable terrain
- 6. Move graphics resources to 0xC000 instead of 0x4000 (or figure out how to
-    auto split the code around this memory segment)
- 7. Load graphics data from a file after the initial load

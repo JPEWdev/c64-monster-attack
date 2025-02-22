@@ -3,10 +3,10 @@
  */
 #include "mobs.h"
 
+#include <cbm.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "color.h"
 #include "isr.h"
 #include "move.h"
 #include "player.h"

@@ -11,9 +11,3 @@ screen_data:
     .global sprite_pointers
 sprite_pointers:
     .space 8
-
-    ; Color Data
-    .section colordata, "a"
-    .global color_data
-color_data:
-    .space 1000

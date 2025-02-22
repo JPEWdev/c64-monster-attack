@@ -1,13 +1,13 @@
 /*
  * SPDX-License-Identifier: MIT
  */
+#include <cbm.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "color.h"
 #include "draw.h"
 #include "input.h"
 #include "isr.h"
@@ -265,7 +265,7 @@ void game_loop(void) {
         DEBUG_COLOR(COLOR_GREEN);
 
         update_player();
-        DEBUG_COLOR(COLOR_VIOLET);
+        DEBUG_COLOR(COLOR_PURPLE);
         update_mobs();
 
         if (player_health <= 0 && !player_temp_invulnerable) {
@@ -274,9 +274,32 @@ void game_loop(void) {
     }
 }
 
+void load_data(char const* fn, uint8_t* dest) {
+    uint8_t buffer[256];
+
+    cbm_k_clall();
+    cbm_k_setnam(fn);
+    cbm_k_setlfs(15, 8, 2);
+    cbm_k_open();
+    cbm_k_chkin(15);
+    uint8_t i = 0;
+    while (!cbm_k_readst()) {
+        buffer[i] = cbm_k_chrin();
+        i++;
+        if (i == 0) {
+            ALL_RAM() { memcpy(dest, buffer, sizeof(buffer)); }
+            dest += sizeof(buffer);
+        }
+    }
+    ALL_RAM() { memcpy(dest, buffer, i); }
+    cbm_k_close(15);
+}
+
 int main() {
     // Blank screen while setting up
     VICII_CTRL_1 &= ~_BV(VICII_DEN_BIT);
+
+    load_data("GRAPHICS", &video_base);
 
     disable_interrupts();
 
@@ -309,7 +332,7 @@ int main() {
 
     // Set colors
     VICII_BORDER_COLOR = COLOR_BLACK;
-    VICII_SPRITE_MULTICOLOR_0 = COLOR_LIGHT_RED;
+    VICII_SPRITE_MULTICOLOR_0 = COLOR_LIGHTRED;
     VICII_SPRITE_MULTICOLOR_1 = COLOR_BLACK;
 
     current_screen = &main_screen;

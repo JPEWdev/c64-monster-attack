@@ -4,9 +4,9 @@
 #ifndef _PLAYER_H
 #define _PLAYER_H
 
+#include <cbm.h>
 #include <stdint.h>
 
-#include "color.h"
 #include "sprite.h"
 #include "util.h"
 

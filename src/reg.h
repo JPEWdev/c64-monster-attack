@@ -153,7 +153,7 @@ typedef void (*isr_proc)(void);
 #define CIA_2_TIMER_A_CTRL CIA_2_REG(TIMER_A_CTRL)
 #define CIA_2_TIMER_B_CTRL CIA_2_REG(TIMER_B_CTRL)
 
-extern const uint8_t video_base;
+extern uint8_t video_base;
 #define VIC_BASE ((uint16_t)&video_base)
 
 #define SCREEN_WIDTH_TILE (40)

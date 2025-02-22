@@ -48,4 +48,13 @@ void int_to_string(int16_t i, char str[7]);
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y);
 
+uint8_t set_all_ram(void);
+void restore_all_ram(uint8_t* port);
+
+#define ALL_RAM()                                                       \
+    for (uint8_t _todo = 1, _port_save                                  \
+                            __attribute__((cleanup(restore_all_ram))) = \
+                                set_all_ram();                          \
+         _todo; _todo = 0)
+
 #endif

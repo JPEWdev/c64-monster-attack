@@ -3,9 +3,9 @@
  */
 #include "isr.h"
 
+#include <cbm.h>
 #include <stdint.h>
 
-#include "color.h"
 #include "player.h"
 #include "reg.h"
 #include "util.h"

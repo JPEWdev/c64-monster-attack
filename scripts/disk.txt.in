@@ -1,0 +1,5 @@
+format ${CMAKE_PROJECT_NAME},1 d64 ${CMAKE_PROJECT_NAME}.d64 
+attach ${CMAKE_PROJECT_NAME}.d64 
+write ${CMAKE_PROJECT_NAME}.prg ${D64_PROG_NAME}
+write graphics.seq graphics,s
+list

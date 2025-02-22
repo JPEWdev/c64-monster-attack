@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.18)
 set(LLVM_MOS_PLATFORM c64)
 find_package(llvm-mos-sdk REQUIRED)
 
-find_program(LLVM_OBJDUMP NAMES llvm-objdump REQUIRED)
+find_program(OBJDUMP NAMES llvm-objdump objdump REQUIRED)
+find_program(OBJCOPY NAMES llvm-objcopy objcopy REQUIRED)
 find_program(LLVM_NM NAMES llvm-nm REQUIRED)
 find_program(PYTHON3 NAMES python3 REQUIRED)
 
@@ -110,38 +111,47 @@ list(APPEND SOURCES map-data.c)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker-script.ld)
 
-add_executable(${CMAKE_PROJECT_NAME}.prg ${SOURCES})
+set(PROG_OUTPUT ${CMAKE_PROJECT_NAME}.prg)
+add_executable(${PROG_OUTPUT} ${SOURCES})
 if (DEBUG_MODE)
-    target_compile_definitions(${CMAKE_PROJECT_NAME}.prg PRIVATE DEBUG=1)
+    target_compile_definitions(${PROG_OUTPUT} PRIVATE DEBUG=1)
 endif()
-target_compile_definitions(${CMAKE_PROJECT_NAME}.prg PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
-target_compile_options(${CMAKE_PROJECT_NAME}.prg PRIVATE -Wall -Werror)
-target_include_directories(${CMAKE_PROJECT_NAME}.prg PRIVATE src)
+target_compile_definitions(${PROG_OUTPUT} PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
+target_compile_options(${PROG_OUTPUT} PRIVATE -Wall -Werror)
+target_include_directories(${PROG_OUTPUT} PRIVATE src)
 
-set_target_properties(${CMAKE_PROJECT_NAME}.prg PROPERTIES
+set_target_properties(${PROG_OUTPUT} PROPERTIES
     LINK_FLAGS "-T ${LINKER_SCRIPT} -Wl,-Map,${CMAKE_PROJECT_NAME}.map"
     LINK_DEPENDS ${LINKER_SCRIPT}
 )
 
 add_custom_command(
-    COMMAND ${LLVM_OBJDUMP} -S ${CMAKE_PROJECT_NAME}.prg.elf > ${CMAKE_PROJECT_NAME}.lst
-    DEPENDS ${CMAKE_PROJECT_NAME}.prg
+    COMMAND ${OBJCOPY} -O binary --only-section=.video ${PROG_OUTPUT}.elf graphics.seq
+    DEPENDS ${PROG_OUTPUT}
+    OUTPUT graphics.seq
+    VERBATIM
+)
+
+add_custom_command(
+    COMMAND ${OBJDUMP} -S ${PROG_OUTPUT}.elf > ${CMAKE_PROJECT_NAME}.lst
+    DEPENDS ${PROG_OUTPUT}
     OUTPUT ${CMAKE_PROJECT_NAME}.lst
     VERBATIM
 )
 add_custom_target(listfile ALL DEPENDS ${CMAKE_PROJECT_NAME}.lst)
 
+configure_file(${CMAKE_SOURCE_DIR}/scripts/disk.txt.in disk.txt)
 add_custom_command(
-    COMMAND ${C1541} -format ${CMAKE_PROJECT_NAME},1 d64 ${CMAKE_PROJECT_NAME}.d64 -attach ${CMAKE_PROJECT_NAME}.d64 -write ${CMAKE_PROJECT_NAME}.prg ${D64_PROG_NAME}
-    DEPENDS ${CMAKE_PROJECT_NAME}.prg
+    COMMAND ${C1541} < disk.txt
+    DEPENDS disk.txt ${PROG_OUTPUT} graphics.seq
     OUTPUT ${CMAKE_PROJECT_NAME}.d64
     VERBATIM
 )
 add_custom_target(d64 ALL DEPENDS ${CMAKE_PROJECT_NAME}.d64)
 
 add_custom_command(
-    COMMAND ${LLVM_NM} ${CMAKE_PROJECT_NAME}.prg.elf > ${CMAKE_PROJECT_NAME}.sym
-    DEPENDS ${CMAKE_PROJECT_NAME}.prg
+    COMMAND ${LLVM_NM} ${PROG_OUTPUT}.elf > ${CMAKE_PROJECT_NAME}.sym
+    DEPENDS ${PROG_OUTPUT}
     OUTPUT ${CMAKE_PROJECT_NAME}.sym
     VERBATIM
 )
@@ -161,15 +171,15 @@ add_custom_command(
 )
 
 add_custom_target(debug
-    COMMAND /bin/sh -c "exec ${X64SC} -nativemonitor -moncommands ${CMAKE_PROJECT_NAME}-debug.ll ${CMAKE_PROJECT_NAME}.prg"
-    DEPENDS ${CMAKE_PROJECT_NAME}.prg ${CMAKE_PROJECT_NAME}-debug.ll
+    COMMAND /bin/sh -c "exec ${X64SC} -nativemonitor -moncommands ${CMAKE_PROJECT_NAME}-debug.ll ${CMAKE_PROJECT_NAME}.d64"
+    DEPENDS ${CMAKE_PROJECT_NAME}.d64 ${CMAKE_PROJECT_NAME}-debug.ll
     USES_TERMINAL
     VERBATIM
 )
 
 add_custom_target(run
-    COMMAND /bin/sh -c "exec ${X64SC} -nativemonitor -moncommands ${CMAKE_PROJECT_NAME}.ll ${CMAKE_PROJECT_NAME}.prg"
-    DEPENDS ${CMAKE_PROJECT_NAME}.prg ${CMAKE_PROJECT_NAME}.ll
+    COMMAND /bin/sh -c "exec ${X64SC} -nativemonitor -moncommands ${CMAKE_PROJECT_NAME}.ll ${CMAKE_PROJECT_NAME}.d64"
+    DEPENDS ${CMAKE_PROJECT_NAME}.d64 ${CMAKE_PROJECT_NAME}.ll
     USES_TERMINAL
     VERBATIM
 )

@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include "reg.h"
+
 #define setbit_helper(b) \
     case b:              \
         return 1 << b
@@ -127,5 +129,17 @@ enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
             }
         }
     }
+}
+
+uint8_t set_all_ram(void) {
+    disable_interrupts();
+    uint8_t p = PROCESSOR_PORT;
+    PROCESSOR_PORT = (PROCESSOR_PORT & ~MEMORY_MASK) | MEMORY_RAM_ONLY;
+    return p;
+}
+
+void restore_all_ram(uint8_t* port) {
+    PROCESSOR_PORT = *port;
+    enable_interrupts();
 }
 
