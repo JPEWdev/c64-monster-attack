@@ -39,6 +39,9 @@
 #define COIN_X_TILE (0)
 #define COIN_Y_TILE (1)
 
+#define PLAYER_START_X_QUAD ((MAP_WIDTH_QUAD / 2) + 3)
+#define PLAYER_START_Y_QUAD (MAP_HEIGHT_QUAD / 2)
+
 extern const uint8_t game_tiles[256];
 
 #ifdef DEBUG
@@ -298,7 +301,8 @@ static bool new_skeleton(void) {
     mob->target_y = y;
     mob->on_reached_target = skeleton_reached_target;
     mob->on_player_collision = skeleton_player_collision;
-    mob->speed = 1 + (rand() & 0x3);
+    mob->speed_pixels = 1;
+    mob->speed_frames = 1 + (rand() & 0x3);
     skeleton_data[mob->idx].target_quad_x = quad_x;
     skeleton_data[mob->idx].target_quad_y = quad_y;
 
@@ -480,8 +484,8 @@ int main() {
                    COLOR_BLACK);
         draw_background(current_screen);
 
-        player_x = 200;
-        player_y = 100;
+        player_x = QUAD_X_TO_PX(PLAYER_START_X_QUAD) + CENTER_SPRITE_X;
+        player_y = QUAD_Y_TO_PX(PLAYER_START_Y_QUAD) + CENTER_SPRITE_Y;
         player_dir = SOUTH;
         player_sword_damage = 1;
         player_health = 6;

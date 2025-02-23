@@ -22,7 +22,8 @@ struct mob {
     uint8_t color;
     uint8_t damage_color;
     uint8_t damage_counter;
-    uint8_t speed;
+    uint8_t speed_pixels;
+    uint8_t speed_frames;
     uint16_t target_x;
     uint16_t target_y;
     int8_t damage_push_x;

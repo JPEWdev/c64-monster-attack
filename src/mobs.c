@@ -148,11 +148,11 @@ void update_mobs(void) {
                 mobs[i].y += move_y;
             }
         } else {
-            if (mobs[i].speed && (mobs[i].x != mobs[i].target_x ||
+            if (mobs[i].speed_pixels && (mobs[i].x != mobs[i].target_x ||
                                   mobs[i].y != mobs[i].target_y)) {
                 mob_data[i].speed_counter--;
                 if (mob_data[i].speed_counter == 0) {
-                    mob_data[i].speed_counter = mobs[i].speed;
+                    mob_data[i].speed_counter = mobs[i].speed_frames;
                     if (mobs[i].x < mobs[i].target_x) {
                         mobs[i].x++;
                     } else if (mobs[i].x > mobs[i].target_x) {
@@ -320,7 +320,8 @@ struct mob* create_skeleton(uint16_t x, uint16_t y) {
     m->damage_color = COLOR_ORANGE;
     m->animation.rate = 60;
     m->on_sword_collision = damage_mob_pushback;
-    m->speed = 5;
+    m->speed_pixels = 1;
+    m->speed_frames = 5;
 
     return m;
 }
