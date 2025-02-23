@@ -72,6 +72,7 @@ list(APPEND SOURCES
 )
 
 list(APPEND SPRITES
+    sprites/arrow.spm
     sprites/coin.spm
     sprites/heart.spm
     sprites/player_attack_east.spm
@@ -83,6 +84,7 @@ list(APPEND SPRITES
     sprites/player_south.spm
     sprites/player_west.spm
     sprites/skeleton.spm
+    sprites/skeleton_archer.spm
     sprites/sword_east.spm
     sprites/sword_north.spm
     sprites/sword_south.spm

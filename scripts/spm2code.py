@@ -89,6 +89,15 @@ def main():
                         byte |= color(row[p + 4]) << 2
                         byte |= color(row[p + 6])
                         pixel_data.append(byte)
+            else:
+                for row_idx, row in enumerate(sprite["pixels"]):
+                    for p in range(0, len(row), 8):
+                        byte = 0
+                        for i in range(0, 8):
+                            check_bb(row[p + i], row_idx, p + i)
+                            byte |= row[p + i] << i
+
+                        pixel_data.append(byte)
             frame_name = f"{name}_{sprite_idx}"
 
             flags = 0
@@ -129,7 +138,6 @@ def main():
         f.write(f"    .byte {(east - west) + 1}\n")
         f.write(f"{name}_height:\n")
         f.write(f"    .byte {(south - north) + 1}\n")
-
 
     return 0
 
