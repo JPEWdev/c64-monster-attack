@@ -6,11 +6,7 @@
 
 #include "sprite.h"
 
-#define SKELETON_HEIGHT_PX (20)
-#define SKELETON_WIDTH_PX (22)
-#define SKELETON_OFFSET_X_PX (2)
-#define SKELETON_OFFSET_Y_PX (0)
-extern const struct sprite skeleton;
+#define MAX_MOBS (6)
 
 struct mob;
 

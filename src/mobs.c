@@ -51,7 +51,6 @@ static const struct sprite_frame* const heart_frames[] = {
 const struct sprite heart = {FRAMES(heart_frames)};
 extern const struct bb heart_bb;
 
-#define MAX_MOBS (6)
 #define MOB_SPRITE_OFFSET (2)
 #define DAMAGE_PUSH (3)
 
@@ -68,7 +67,7 @@ struct mob* alloc_mob(void) {
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
         if ((mobs_in_use & setbit(i)) == 0) {
             mobs_in_use |= setbit(i);
-            mob_data[i].speed_counter = 0;
+            mob_data[i].speed_counter = 1;
             mob_data[i].needs_redraw = true;
             mob_data[i].collisions = 0;
             mobs[i].idx = i;
@@ -151,6 +150,7 @@ void update_mobs(void) {
         } else {
             if (mobs[i].speed && (mobs[i].x != mobs[i].target_x ||
                                   mobs[i].y != mobs[i].target_y)) {
+                mob_data[i].speed_counter--;
                 if (mob_data[i].speed_counter == 0) {
                     mob_data[i].speed_counter = mobs[i].speed;
                     if (mobs[i].x < mobs[i].target_x) {
@@ -170,8 +170,6 @@ void update_mobs(void) {
                         mobs[i].on_reached_target) {
                         mobs[i].on_reached_target(&mobs[i]);
                     }
-                } else {
-                    mob_data[i].speed_counter--;
                 }
             }
         }

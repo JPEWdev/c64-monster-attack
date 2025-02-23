@@ -90,17 +90,143 @@ void wait_frames(uint16_t num_frames) {
 static uint16_t score = 0;
 static bool score_updated;
 
-uint8_t get_collision(uint8_t* cdata) {
-    disable_interrupts();
-    uint8_t c = *cdata;
-    *cdata = 0;
-    enable_interrupts();
-    return c;
+#define CENTER_SPRITE_X ((QUAD_WIDTH_PX / 2) - (SPRITE_WIDTH_PX / 2))
+#define CENTER_SPRITE_Y ((QUAD_HEIGHT_PX / 2) - (SPRITE_HEIGHT_PX / 2))
+
+static struct {
+    uint8_t target_quad_x;
+    uint8_t target_quad_y;
+} skeleton_data[MAX_MOBS];
+
+static bool check_map_tile(uint8_t x, uint8_t y) {
+    return (x < MAP_WIDTH_QUAD && y < MAP_HEIGHT_QUAD &&
+            map_tile_is_passable(x, y));
+}
+
+static uint16_t distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+    uint16_t xdist;
+    uint16_t ydist;
+
+    if (x1 > x2) {
+        xdist = x1 - x2;
+    } else {
+        xdist = x2 - x2;
+    }
+
+    if (y1 > y2) {
+        ydist = y1 - y2;
+    } else {
+        ydist = y2 - y1;
+    }
+    return xdist + ydist;
 }
 
 static void skeleton_reached_target(struct mob* mob) {
-    mob->target_x = player_x;
-    mob->target_y = player_y;
+    uint8_t cur_quad_x = skeleton_data[mob->idx].target_quad_x;
+    uint8_t cur_quad_y = skeleton_data[mob->idx].target_quad_y;
+    uint8_t next_quad_x = cur_quad_x;
+    uint8_t next_quad_y = cur_quad_y;
+
+    uint8_t r = rand();
+    if (r & 0xC) {
+        // Move toward the player
+        //
+        // Check all 4 directions, starting with a random one, and choose the
+        // one that has the shortest distance to the player
+        uint16_t best_dist = 0xFFFF;
+        for (uint8_t i = 0; i < 4; i++) {
+            switch ((r + i & 0x3)) {
+                case NORTH:
+                    if (check_map_tile(cur_quad_x, cur_quad_y - 1)) {
+                        uint16_t d = distance(mob->x, mob->y - QUAD_HEIGHT_PX,
+                                              player_x, player_y);
+                        if (d < best_dist) {
+                            best_dist = d;
+                            next_quad_x = cur_quad_x;
+                            next_quad_y = cur_quad_y - 1;
+                        }
+                    }
+                    break;
+                case SOUTH:
+                    if (check_map_tile(cur_quad_x, cur_quad_y + 1)) {
+                        uint16_t d = distance(mob->x, mob->y + QUAD_HEIGHT_PX,
+                                              player_x, player_y);
+                        if (d < best_dist) {
+                            best_dist = d;
+                            next_quad_x = cur_quad_x;
+                            next_quad_y = cur_quad_y + 1;
+                        }
+                    }
+                    break;
+                case EAST:
+                    if (check_map_tile(cur_quad_x + 1, cur_quad_y)) {
+                        uint16_t d = distance(mob->x + QUAD_WIDTH_PX, mob->y,
+                                              player_x, player_y);
+                        if (d < best_dist) {
+                            best_dist = d;
+                            next_quad_x = cur_quad_x + 1;
+                            next_quad_y = cur_quad_y;
+                        }
+                    }
+                    break;
+                case WEST:
+                    if (check_map_tile(cur_quad_x - 1, cur_quad_y)) {
+                        uint16_t d = distance(mob->x - QUAD_WIDTH_PX, mob->y,
+                                              player_x, player_y);
+                        if (d < best_dist) {
+                            best_dist = d;
+                            next_quad_x = cur_quad_x - 1;
+                            next_quad_y = cur_quad_y;
+                        }
+                    }
+                    break;
+            }
+        }
+    } else {
+        // Random move
+        //
+        // Randomly pick a direction. If that quad is passable, move there
+        // otherwise check the other directions
+        for (uint8_t i = 0; i < 4; i++) {
+            switch ((r + i & 0x3)) {
+                case NORTH:
+                    if (check_map_tile(cur_quad_x, cur_quad_y - 1)) {
+                        next_quad_x = cur_quad_x;
+                        next_quad_y = cur_quad_y - 1;
+                        goto done;
+                    }
+                    break;
+                case SOUTH:
+                    if (check_map_tile(cur_quad_x, cur_quad_y + 1)) {
+                        next_quad_x = cur_quad_x;
+                        next_quad_y = cur_quad_y + 1;
+                        goto done;
+                    }
+                    break;
+                case EAST:
+                    // East
+                    if (check_map_tile(cur_quad_x + 1, cur_quad_y)) {
+                        next_quad_x = cur_quad_x + 1;
+                        next_quad_y = cur_quad_y;
+                        goto done;
+                    }
+                    break;
+                case WEST:
+                    if (check_map_tile(cur_quad_x - 1, cur_quad_y)) {
+                        next_quad_x = cur_quad_x - 1;
+                        next_quad_y = cur_quad_y;
+                        goto done;
+                    }
+                    break;
+            }
+        }
+    }
+
+done:
+    mob->target_x = QUAD_X_TO_PX(next_quad_x) + CENTER_SPRITE_X;
+    mob->target_y = QUAD_Y_TO_PX(next_quad_y) + CENTER_SPRITE_Y;
+    skeleton_data[mob->idx].target_quad_x = next_quad_x;
+    skeleton_data[mob->idx].target_quad_y = next_quad_y;
 }
 
 static void skeleton_player_collision(struct mob* mob) {
@@ -125,39 +251,42 @@ static void skeleton_player_collision(struct mob* mob) {
 
 static void on_skeleton_kill(struct mob* mob);
 
-#define CENTER_SPRITE_X ((QUAD_WIDTH_PX / 2) - (SPRITE_WIDTH_PX / 2))
-#define CENTER_SPRITE_Y ((QUAD_HEIGHT_PX / 2) - (SPRITE_HEIGHT_PX / 2))
-
 static bool new_skeleton(void) {
-    uint8_t p = rand();
-    uint16_t y;
-    uint16_t x;
+    uint8_t quad_x;
+    uint8_t quad_y;
 
-    switch (p & 0x03) {
-        case 0:
-            // North side
-            x = QUAD_X_TO_PX((p >> 2) % MAP_WIDTH_QUAD) + CENTER_SPRITE_X;
-            y = QUAD_Y_TO_PX(0) + CENTER_SPRITE_Y;
-            break;
+    do {
+        uint8_t p = rand();
 
-        case 1:
-            // South side
-            x = QUAD_X_TO_PX((p >> 2) % MAP_WIDTH_QUAD) + CENTER_SPRITE_X;
-            y = QUAD_Y_TO_PX(MAP_HEIGHT_QUAD - 1) + CENTER_SPRITE_Y;
-            break;
+        switch (p & 0x03) {
+            case 0:
+                // North side
+                quad_x = (p >> 2) % MAP_WIDTH_QUAD;
+                quad_y = 0;
+                break;
 
-        case 2:
-            // East side
-            x = QUAD_X_TO_PX(MAP_WIDTH_QUAD - 1) + CENTER_SPRITE_X;
-            y = QUAD_Y_TO_PX((p >> 2) % MAP_HEIGHT_QUAD) + CENTER_SPRITE_Y;
-            break;
+            case 1:
+                // South side
+                quad_x = (p >> 2) % MAP_WIDTH_QUAD;
+                quad_y = MAP_HEIGHT_QUAD - 1;
+                break;
 
-        case 3:
-            // West side
-            x = QUAD_X_TO_PX(0) + CENTER_SPRITE_X;
-            y = QUAD_Y_TO_PX((p >> 2) % MAP_HEIGHT_QUAD) + CENTER_SPRITE_Y;
-            break;
-    }
+            case 2:
+                // East side
+                quad_x = MAP_WIDTH_QUAD - 1;
+                quad_y = (p >> 2) % MAP_HEIGHT_QUAD;
+                break;
+
+            case 3:
+                // West side
+                quad_x = 0;
+                quad_y = (p >> 2) % MAP_HEIGHT_QUAD;
+                break;
+        }
+    } while (!map_tile_is_passable(quad_x, quad_y));
+
+    uint16_t x = QUAD_X_TO_PX(quad_x) + CENTER_SPRITE_X;
+    uint16_t y = QUAD_Y_TO_PX(quad_y) + CENTER_SPRITE_Y;
 
     struct mob* mob = create_skeleton(x, y);
     if (!mob) {
@@ -165,11 +294,15 @@ static bool new_skeleton(void) {
     }
 
     mob->on_death = on_skeleton_kill;
-    mob->target_x = player_x - (SKELETON_OFFSET_X_PX + SKELETON_WIDTH_PX / 2);
-    mob->target_y = player_y - (SKELETON_OFFSET_Y_PX + SKELETON_HEIGHT_PX / 2);
+    mob->target_x = x;
+    mob->target_y = y;
     mob->on_reached_target = skeleton_reached_target;
     mob->on_player_collision = skeleton_player_collision;
-    mob->speed = 1 + (rand() & 0x7);
+    mob->speed = 1 + (rand() & 0x3);
+    skeleton_data[mob->idx].target_quad_x = quad_x;
+    skeleton_data[mob->idx].target_quad_y = quad_y;
+
+    skeleton_reached_target(mob);
 
     return true;
 }
