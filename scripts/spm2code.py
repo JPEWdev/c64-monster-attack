@@ -125,6 +125,11 @@ def main():
         f.write(f"    .global {name}_bb\n")
         f.write(f"{name}_bb:\n")
         f.write(f"    .byte {north}, {south}, {east}, {west}\n")
+        f.write(f"{name}_width:\n")
+        f.write(f"    .byte {(east - west) + 1}\n")
+        f.write(f"{name}_height:\n")
+        f.write(f"    .byte {(south - north) + 1}\n")
+
 
     return 0
 
