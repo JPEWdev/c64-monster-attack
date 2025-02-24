@@ -352,6 +352,9 @@ void game_loop(void) {
     score = 0;
     score_updated = true;
 
+    fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
+               HEALTH_X_TILE + PLAYER_MAX_HEALTH / 2, HEALTH_Y_TILE, COLOR_RED);
+
     while (true) {
         // Wait for next frame interrupt
         DEBUG_COLOR(COLOR_BLACK);
@@ -373,7 +376,6 @@ void game_loop(void) {
             } else {
                 put_char_xy(HEALTH_X_TILE + i, HEALTH_Y_TILE, HEART_CHAR);
             }
-            set_color(HEALTH_X_TILE + i, HEALTH_Y_TILE, COLOR_RED);
         }
 
         if (player_coins != last_coins_drawn) {
