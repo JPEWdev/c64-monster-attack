@@ -73,7 +73,7 @@ struct mob* alloc_mob(void) {
             mob_data[i].needs_redraw = true;
             mob_data[i].collisions = 0;
             mob_data[i].reached_target = false;
-            mob_data[i].last_update_frame = frame_count >> 1;
+            mob_data[i].last_update_frame = frame_count;
             mobs[i].idx = i;
             return &mobs[i];
         }
@@ -192,9 +192,8 @@ void update_mobs(void) {
             mobs[mob_update_idx].on_update) {
             mobs[mob_update_idx].on_update(
                 &mobs[mob_update_idx],
-                (frame_count >> 1) -
-                    mob_data[mob_update_idx].last_update_frame);
-            mob_data[mob_update_idx].last_update_frame = frame_count >> 1;
+                frame_count - mob_data[mob_update_idx].last_update_frame);
+            mob_data[mob_update_idx].last_update_frame = frame_count;
         }
 
         mob_update_idx++;

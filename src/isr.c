@@ -10,7 +10,8 @@
 #include "reg.h"
 #include "util.h"
 
-uint8_t volatile frame_count = 0;
+uint8_t volatile interrupt_count = 0;
+uint8_t frame_count = 0;
 uint8_t __zeropage player_collisions = 0;
 uint8_t __zeropage sword_collisions = 0;
 

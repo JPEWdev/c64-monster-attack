@@ -41,7 +41,7 @@ raster_loop:
     lda vicii_raster_next
     sta VIC_HLINE
 
-    inc frame_count
+    inc interrupt_count
 
     lda #$01
     sta VIC_IRR

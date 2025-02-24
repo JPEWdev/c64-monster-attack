@@ -76,10 +76,11 @@ void prepare_status_int(void) {
 }
 
 void frame_wait(void) {
-    static uint8_t next_frame = 0;
-    while (frame_count == next_frame);
-    while (frame_count == next_frame + 1);
-    next_frame = frame_count;
+    static uint8_t next_interrupt = 0;
+    while (interrupt_count == next_interrupt);
+    while (interrupt_count == next_interrupt + 1);
+    next_interrupt = interrupt_count;
+    frame_count++;
 
     prepare_status_int();
 }

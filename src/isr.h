@@ -6,7 +6,8 @@
 
 #include <stdint.h>
 
-extern uint8_t volatile frame_count;
+extern uint8_t volatile interrupt_count;
+extern uint8_t frame_count;
 extern uint8_t __zeropage vicii_ctrl_1_next;
 extern uint8_t __zeropage vicii_raster_next;
 extern uint8_t __zeropage vicii_interrupt_enable_next;
