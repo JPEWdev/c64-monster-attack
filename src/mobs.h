@@ -33,7 +33,7 @@ struct mob {
     mob_action_handler on_player_collision;
     mob_action_handler on_death;
     mob_action_handler on_reached_target;
-    mob_action_handler on_update;
+    void (*on_update)(struct mob* mob, uint8_t num_frames);
 };
 
 struct mob* alloc_mob(void);

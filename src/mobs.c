@@ -62,6 +62,7 @@ static struct {
     bool needs_redraw;
     uint8_t collisions;
     bool reached_target;
+    uint8_t last_update_frame;
 } mob_data[MAX_MOBS];
 
 struct mob* alloc_mob(void) {
@@ -72,6 +73,7 @@ struct mob* alloc_mob(void) {
             mob_data[i].needs_redraw = true;
             mob_data[i].collisions = 0;
             mob_data[i].reached_target = false;
+            mob_data[i].last_update_frame = frame_count >> 1;
             mobs[i].idx = i;
             return &mobs[i];
         }
@@ -185,14 +187,20 @@ void update_mobs(void) {
         }
     }
 
-    if ((mobs_in_use & setbit(mob_update_idx)) &&
-        mobs[mob_update_idx].on_update) {
-        mobs[mob_update_idx].on_update(&mobs[mob_update_idx]);
-    }
+    if (!called_reached_target) {
+        if ((mobs_in_use & setbit(mob_update_idx)) &&
+            mobs[mob_update_idx].on_update) {
+            mobs[mob_update_idx].on_update(
+                &mobs[mob_update_idx],
+                (frame_count >> 1) -
+                    mob_data[mob_update_idx].last_update_frame);
+            mob_data[mob_update_idx].last_update_frame = frame_count >> 1;
+        }
 
-    mob_update_idx++;
-    if (mob_update_idx > MAX_MOBS) {
-        mob_update_idx = 0;
+        mob_update_idx++;
+        if (mob_update_idx > MAX_MOBS) {
+            mob_update_idx = 0;
+        }
     }
 }
 
@@ -351,8 +359,8 @@ static void coin_player_collision(struct mob* mob) {
     kill_mob(mob);
 }
 
-static void coin_update(struct mob* mob) {
-    coin_data[mob->idx].ttl -= MAX_MOBS;
+static void coin_update(struct mob* mob, uint8_t num_frames) {
+    coin_data[mob->idx].ttl -= num_frames;
     if (coin_data[mob->idx].ttl < 0) {
         kill_mob(mob);
         return;
@@ -398,8 +406,8 @@ static void heart_player_collision(struct mob* mob) {
     kill_mob(mob);
 }
 
-static void heart_update(struct mob* mob) {
-    heart_data[mob->idx].ttl -= MAX_MOBS;
+static void heart_update(struct mob* mob, uint8_t num_frames) {
+    heart_data[mob->idx].ttl -= num_frames;
     if (heart_data[mob->idx].ttl <= 0) {
         kill_mob(mob);
         return;
