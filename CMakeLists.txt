@@ -122,7 +122,7 @@ if (DEBUG_MODE)
     target_compile_definitions(${PROG_OUTPUT} PRIVATE DEBUG=1)
 endif()
 target_compile_definitions(${PROG_OUTPUT} PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
-target_compile_options(${PROG_OUTPUT} PRIVATE -Wall -Werror)
+target_compile_options(${PROG_OUTPUT} PRIVATE -Wall -Werror -fnonreentrant)
 target_include_directories(${PROG_OUTPUT} PRIVATE src)
 
 set_target_properties(${PROG_OUTPUT} PROPERTIES
