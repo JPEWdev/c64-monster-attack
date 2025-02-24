@@ -61,6 +61,7 @@ static struct {
     uint8_t speed_counter;
     bool needs_redraw;
     uint8_t collisions;
+    bool reached_target;
 } mob_data[MAX_MOBS];
 
 struct mob* alloc_mob(void) {
@@ -70,6 +71,7 @@ struct mob* alloc_mob(void) {
             mob_data[i].speed_counter = 1;
             mob_data[i].needs_redraw = true;
             mob_data[i].collisions = 0;
+            mob_data[i].reached_target = false;
             mobs[i].idx = i;
             return &mobs[i];
         }
@@ -122,6 +124,8 @@ void draw_mobs(void) {
 }
 
 void update_mobs(void) {
+    bool called_reached_target = false;
+
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
         if ((mobs_in_use & setbit(i)) == 0) {
             continue;
@@ -149,7 +153,7 @@ void update_mobs(void) {
             }
         } else {
             if (mobs[i].speed_pixels && (mobs[i].x != mobs[i].target_x ||
-                                  mobs[i].y != mobs[i].target_y)) {
+                                         mobs[i].y != mobs[i].target_y)) {
                 mob_data[i].speed_counter--;
                 if (mob_data[i].speed_counter == 0) {
                     mob_data[i].speed_counter = mobs[i].speed_frames;
@@ -168,10 +172,16 @@ void update_mobs(void) {
                     if (mobs[i].x == mobs[i].target_x &&
                         mobs[i].y == mobs[i].target_y &&
                         mobs[i].on_reached_target) {
-                        mobs[i].on_reached_target(&mobs[i]);
+                        mob_data[i].reached_target = true;
                     }
                 }
             }
+        }
+
+        if (mob_data[i].reached_target && !called_reached_target) {
+            mobs[i].on_reached_target(&mobs[i]);
+            mob_data[i].reached_target = false;
+            called_reached_target = true;
         }
     }
 
