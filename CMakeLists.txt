@@ -57,18 +57,21 @@ endfunction()
 list(APPEND SOURCES
 	src/draw.c
 	src/input.c
-    src/isr.c
-    src/isr-handler.S
 	src/main.c
 	src/map.c
 	src/mobs.c
 	src/player-sprite.c
 	src/screen.S
 	src/sprite.c
+    src/isr-handler.S
+    src/isr.c
     src/main.c
+    src/mobs/coin.c
+    src/mobs/heart.c
+    src/mobs/skeleton.c
+    src/move.c
     src/player.c
     src/util.c
-    src/move.c
 )
 
 list(APPEND SPRITES

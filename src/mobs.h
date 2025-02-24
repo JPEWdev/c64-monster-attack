@@ -5,8 +5,11 @@
 #define MOBS_H
 
 #include "sprite.h"
+#include "util.h"
 
 #define MAX_MOBS (6)
+
+#define FRAMES(f) ARRAY_SIZE(f), f
 
 struct mob;
 
@@ -43,6 +46,7 @@ void draw_mobs(void);
 void update_mobs(void);
 void capture_mob_collisions(void);
 void damage_mob(struct mob* mob, uint8_t damage);
+void damage_mob_pushback(struct mob* mob, uint8_t damage);
 void kill_mob(struct mob* mob);
 
 struct mob* find_mob_by_sprite_idx(uint8_t sprite_idx);
