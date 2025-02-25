@@ -38,7 +38,7 @@ static void heart_update(uint8_t idx, uint8_t num_frames) {
     }
 }
 
-uint8_t create_heart(uint16_t x, uint16_t y) {
+uint8_t create_heart(uint16_t map_x, uint8_t map_y) {
     uint8_t idx = alloc_mob();
     if (idx == MAX_MOBS) {
         return MAX_MOBS;
@@ -46,7 +46,7 @@ uint8_t create_heart(uint16_t x, uint16_t y) {
 
     mob_set_sprite(idx, &heart);
     mob_set_bb(idx, heart_bb);
-    mob_set_position(idx, x, y);
+    mob_set_position(idx, map_x, map_y);
     mob_set_hp(idx, 0);
     mob_set_color(idx, COLOR_RED);
     mob_set_animation_rate(idx, 15);

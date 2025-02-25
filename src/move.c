@@ -7,107 +7,53 @@
 #include "map.h"
 #include "sprite.h"
 
-bool check_quad(uint16_t x, uint16_t y) {
-    int8_t quad_x;
-    int8_t quad_y;
-    position_to_quad(x, y, &quad_x, &quad_y);
-
-    if (quad_x < 0 || quad_y < 0) {
-        return false;
-    }
-
-    return map_tile_is_passable(quad_x, quad_y);
-}
-
 #define BB_PAD_NORTH (4)
 #define BB_PAD_SOUTH (4)
 #define BB_PAD_EAST (4)
 #define BB_PAD_WEST (4)
 
-void check_move(uint16_t x, uint16_t y, int8_t* move_x, int8_t* move_y) {
-    uint8_t bb_check = 0;
-    int8_t tx = *move_x;
-    int8_t ty = *move_y;
-
-    if (tx > 0) {
-        bb_check |= _BV(EAST);
-    } else if (tx < 0) {
-        bb_check |= _BV(WEST);
+void check_move(uint16_t map_x, uint8_t map_y, int8_t* move_x, int8_t* move_y) {
+    int8_t check_x = 0;
+    int8_t check_y = 0;
+    if (*move_x < 0) {
+        check_x = *move_x - BB_PAD_WEST;
+        if (-check_x > map_x) {
+            check_x = 0;
+            *move_x = 0;
+        }
+    } else if (*move_x > 0) {
+        check_x = *move_x + BB_PAD_EAST;
+        if (map_x > MAP_WIDTH_PX - check_x) {
+            check_x = 0;
+            *move_x = 0;
+        }
     }
 
-    if (ty > 0) {
-        bb_check |= _BV(SOUTH);
-    } else if (ty < 0) {
-        bb_check |= _BV(NORTH);
+    if (*move_y < 0) {
+        check_y = *move_y - BB_PAD_NORTH;
+        if (-check_y > map_y) {
+            check_y = 0;
+            *move_y = 0;
+        }
+    } else if (*move_y > 0) {
+        check_y = *move_y + BB_PAD_EAST;
+        if (map_y > MAP_HEIGHT_PX - check_y) {
+            check_y = 0;
+            *move_y = 0;
+        }
     }
 
-    switch (bb_check) {
-        case _BV(NORTH):
-            if (!check_quad(x + BB_PAD_EAST + tx, y - BB_PAD_NORTH + ty) ||
-                !check_quad(x - BB_PAD_WEST + tx, y - BB_PAD_NORTH + ty)) {
-                *move_y = 0;
-            }
-            break;
-
-        case _BV(SOUTH):
-            if (!check_quad(x + BB_PAD_EAST + tx, y + BB_PAD_SOUTH + ty) ||
-                !check_quad(x - BB_PAD_WEST + tx, y + BB_PAD_SOUTH + ty)) {
-                *move_y = 0;
-            }
-            break;
-
-        case _BV(EAST):
-            if (!check_quad(x + BB_PAD_EAST + tx, y - BB_PAD_NORTH + ty) ||
-                !check_quad(x + BB_PAD_EAST + tx, y + BB_PAD_SOUTH + ty)) {
-                *move_x = 0;
-            }
-            break;
-
-        case _BV(WEST):
-            if (!check_quad(x - BB_PAD_WEST + tx, y - BB_PAD_NORTH + ty) ||
-                !check_quad(x - BB_PAD_WEST + tx, y + BB_PAD_SOUTH + ty)) {
-                *move_x = 0;
-            }
-            break;
-
-        case _BV(NORTH) | _BV(EAST):
-            if (!check_quad(x + BB_PAD_EAST + tx, y - BB_PAD_NORTH + ty)) {
-                *move_x = 0;
-                *move_y = 0;
-            }
-            break;
-
-        case _BV(NORTH) | _BV(WEST):
-            if (!check_quad(x - BB_PAD_WEST + tx, y - BB_PAD_NORTH + ty)) {
-                *move_x = 0;
-                *move_y = 0;
-            }
-            break;
-
-        case _BV(SOUTH) | _BV(EAST):
-            if (!check_quad(x + BB_PAD_EAST + tx, y + BB_PAD_SOUTH + ty)) {
-                *move_x = 0;
-                *move_y = 0;
-            }
-            break;
-
-        case _BV(SOUTH) | _BV(WEST):
-            if (!check_quad(x - BB_PAD_WEST + tx, y + BB_PAD_SOUTH + ty)) {
-                *move_x = 0;
-                *move_y = 0;
-            }
-            break;
-    }
-}
-
-bool check_move_fast(uint16_t x, uint16_t y, int8_t move_x, int8_t move_y) {
-    int8_t new_quad_x;
-    int8_t new_quad_y;
-    position_to_quad(x + move_x, y + move_y, &new_quad_x, &new_quad_y);
-
-    if (new_quad_x < 0 || new_quad_y < 0) {
-        return false;
+    if (!*move_x && !*move_y) {
+        return;
     }
 
-    return map_tile_is_passable(new_quad_x, new_quad_y);
+    if (!map_tile_is_passable((map_x + check_x) / QUAD_HEIGHT_PX,
+                              map_y / QUAD_HEIGHT_PX)) {
+        *move_x = 0;
+    }
+
+    if (!map_tile_is_passable(map_x / QUAD_WIDTH_PX,
+                              (map_y + check_y) / QUAD_HEIGHT_PX)) {
+        *move_y = 0;
+    }
 }

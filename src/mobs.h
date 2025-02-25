@@ -18,14 +18,18 @@ typedef void (*mob_update_handler)(uint8_t idx, uint8_t num_frames);
 void mob_set_sprite(uint8_t idx, struct sprite const* sprite);
 struct sprite const* mob_get_sprite(uint8_t idx);
 void mob_set_bb(uint8_t idx, struct bb bb);
-void mob_set_position(uint8_t idx, uint16_t x, uint16_t y);
+void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y);
 uint16_t mob_get_x(uint8_t idx);
 uint16_t mob_get_y(uint8_t idx);
+uint16_t mob_get_map_x(uint8_t idx);
+uint8_t mob_get_map_y(uint8_t idx);
+uint8_t mob_get_quad_x(uint8_t idx);
+uint8_t mob_get_quad_y(uint8_t idx);
 void mob_set_hp(uint8_t idx, int8_t hp);
 void mob_set_color(uint8_t idx, uint8_t color);
 void mob_set_damage_color(uint8_t idx, uint8_t color);
 void mob_set_speed(uint8_t idx, uint8_t speed_pixels, uint8_t speed_frames);
-void mob_set_target(uint8_t idx, uint16_t x, uint16_t y);
+void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y);
 void mob_set_sword_collision_handler(uint8_t idx,
                                      mob_sword_collision_handler handler);
 void mob_trigger_sword_collision(uint8_t idx, uint8_t damage);
@@ -48,8 +52,8 @@ void kill_mob(uint8_t idx);
 
 bool check_mob_collision(uint8_t idx, uint8_t sprite_idx);
 
-uint8_t create_skeleton(uint16_t x, uint16_t y);
-uint8_t create_coin(uint16_t x, uint16_t y, uint8_t value);
-uint8_t create_heart(uint16_t x, uint16_t y);
+uint8_t create_skeleton(uint16_t map_x, uint8_t map_y);
+uint8_t create_coin(uint16_t map_x, uint8_t map_y, uint8_t value);
+uint8_t create_heart(uint16_t map_x, uint8_t map_y);
 
 #endif

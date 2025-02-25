@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "input.h"
+#include "map.h"
 #include "mobs.h"
 #include "move.h"
 #include "player-sprite.h"
@@ -13,8 +14,8 @@
 
 #define PLAYER_SPEED (2)
 
-uint16_t player_x;
-uint16_t player_y;
+uint16_t player_map_x;
+uint8_t player_map_y;
 enum direction player_dir = SOUTH;
 uint8_t player_sword_damage;
 uint8_t player_health;
@@ -49,7 +50,7 @@ static const struct {
 void init_player(void) {
     draw_direction_sprite(PLAYER_SPRITE_IDX, current_player_sprite, COLOR_GREEN,
                           player_dir);
-    move_sprite(PLAYER_SPRITE_IDX, player_x, player_y);
+    move_sprite(PLAYER_SPRITE_IDX, player_get_x(), player_get_y());
     sprite_enable_collisions(PLAYER_SPRITE_IDX, true);
     sprite_enable_collisions(SWORD_SPRITE_IDX, true);
 
@@ -100,8 +101,20 @@ void heal_player(uint8_t health) {
     }
 }
 
+uint16_t player_get_x(void) {
+    return player_map_x + MAP_OFFSET_X_PX - SPRITE_WIDTH_PX / 2;
+}
+
+uint8_t player_get_y(void) {
+    return player_map_y + MAP_OFFSET_Y_PX - SPRITE_HEIGHT_PX / 2;
+}
+
+uint8_t player_get_quad_x(void) { return player_map_x / QUAD_WIDTH_PX; }
+
+uint8_t player_get_quad_y(void) { return player_map_y / QUAD_HEIGHT_PX; }
+
 void draw_player(void) {
-    move_sprite(PLAYER_SPRITE_IDX, player_x, player_y);
+    move_sprite(PLAYER_SPRITE_IDX, player_get_x(), player_get_y());
     move_sprite(SWORD_SPRITE_IDX, sword_x, sword_y);
     if (sword_state == SWORD_VISIBLE && !sprite_is_visible(SWORD_SPRITE_IDX)) {
         draw_direction_sprite(SWORD_SPRITE_IDX, &sword_sprite, COLOR_WHITE,
@@ -241,17 +254,16 @@ void update_player(void) {
             }
         }
     }
-    check_move(player_x + SPRITE_WIDTH_PX / 2, player_y + SPRITE_HEIGHT_PX / 2,
-               &move_delta_x, &move_delta_y);
+    check_move(player_map_x, player_map_y, &move_delta_x, &move_delta_y);
 
     if (move_delta_x || move_delta_y) {
         player_moving = true;
     }
 
-    player_x += move_delta_x;
-    player_y += move_delta_y;
-    sword_x = player_x + sword_offset[player_dir].x;
-    sword_y = player_y + sword_offset[player_dir].y;
+    player_map_x += move_delta_x;
+    player_map_y += move_delta_y;
+    sword_x = player_get_x() + sword_offset[player_dir].x;
+    sword_y = player_get_y() + sword_offset[player_dir].y;
 }
 
 extern const struct bb player_north_bb;

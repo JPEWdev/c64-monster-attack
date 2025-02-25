@@ -43,7 +43,7 @@ static void coin_update(uint8_t idx, uint8_t num_frames) {
     }
 }
 
-uint8_t create_coin(uint16_t x, uint16_t y, uint8_t value) {
+uint8_t create_coin(uint16_t map_x, uint8_t map_y, uint8_t value) {
     uint8_t idx = alloc_mob();
     if (idx == MAX_MOBS) {
         return idx;
@@ -51,7 +51,7 @@ uint8_t create_coin(uint16_t x, uint16_t y, uint8_t value) {
 
     mob_set_sprite(idx, &coin);
     mob_set_bb(idx, coin_bb);
-    mob_set_position(idx, x, y);
+    mob_set_position(idx, map_x, map_y);
     mob_set_hp(idx, 0);
     mob_set_color(idx, COLOR_YELLOW);
     mob_set_animation_rate(idx, 15);

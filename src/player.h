@@ -26,8 +26,8 @@ enum sword_state {
 #define PLAYER_HIT_COLOR_2 (COLOR_CYAN)
 #define PLAYER_HIT_COLOR_3 (COLOR_ORANGE)
 
-extern uint16_t player_x;
-extern uint16_t player_y;
+extern uint16_t player_map_x;
+extern uint8_t player_map_y;
 extern enum direction player_dir;
 extern uint8_t player_sword_damage;
 extern uint8_t player_health;
@@ -40,6 +40,10 @@ extern uint16_t sword_x;
 extern uint16_t sword_y;
 
 void init_player(void);
+uint16_t player_get_x(void);
+uint8_t player_get_y(void);
+uint8_t player_get_quad_x(void);
+uint8_t player_get_quad_y(void);
 bool damage_player(uint8_t damage);
 void damage_player_push(uint8_t damage, int8_t push_x, int8_t push_y);
 void heal_player(uint8_t health);

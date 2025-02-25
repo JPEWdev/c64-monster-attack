@@ -94,42 +94,32 @@ void wait_frames(uint16_t num_frames) {
 static uint16_t score = 0;
 static bool score_updated;
 
-#define CENTER_SPRITE_X ((QUAD_WIDTH_PX / 2) - (SPRITE_WIDTH_PX / 2))
-#define CENTER_SPRITE_Y ((QUAD_HEIGHT_PX / 2) - (SPRITE_HEIGHT_PX / 2))
-
-static struct {
-    uint8_t target_quad_x[MAX_MOBS];
-    uint8_t target_quad_y[MAX_MOBS];
-} skeleton_data;
-
-static bool check_map_tile(uint8_t x, uint8_t y) {
-    return (x < MAP_WIDTH_QUAD && y < MAP_HEIGHT_QUAD &&
-            map_tile_is_passable(x, y));
-}
-
-static uint16_t distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+static uint8_t quad_distance(uint8_t quad_x1, uint8_t quad_y1, uint8_t quad_x2,
+                             uint8_t quad_y2) {
     uint16_t xdist;
     uint16_t ydist;
 
-    if (x1 > x2) {
-        xdist = x1 - x2;
+    if (quad_x1 > quad_x2) {
+        xdist = quad_x1 - quad_x2;
     } else {
-        xdist = x2 - x2;
+        xdist = quad_x2 - quad_x2;
     }
 
-    if (y1 > y2) {
-        ydist = y1 - y2;
+    if (quad_y1 > quad_y2) {
+        ydist = quad_y1 - quad_y2;
     } else {
-        ydist = y2 - y1;
+        ydist = quad_y2 - quad_y1;
     }
     return xdist + ydist;
 }
 
 static void skeleton_reached_target(uint8_t idx) {
-    uint8_t cur_quad_x = skeleton_data.target_quad_x[idx];
-    uint8_t cur_quad_y = skeleton_data.target_quad_y[idx];
-    uint8_t next_quad_x = cur_quad_x;
-    uint8_t next_quad_y = cur_quad_y;
+    uint8_t mob_quad_x = mob_get_quad_x(idx);
+    uint8_t mob_quad_y = mob_get_quad_y(idx);
+    uint8_t next_quad_x = mob_quad_x;
+    uint8_t next_quad_y = mob_quad_y;
+    uint8_t player_quad_x = player_get_quad_x();
+    uint8_t player_quad_y = player_get_quad_y();
 
     uint8_t r = rand();
     if (r & 0xC) {
@@ -137,54 +127,56 @@ static void skeleton_reached_target(uint8_t idx) {
         //
         // Check all 4 directions, starting with a random one, and choose the
         // one that has the shortest distance to the player
-        uint16_t best_dist = 0xFFFF;
+        uint8_t best_dist = 0xFF;
         for (uint8_t i = 0; i < 4; i++) {
             switch ((r + i & 0x3)) {
                 case NORTH:
-                    if (check_map_tile(cur_quad_x, cur_quad_y - 1)) {
-                        uint16_t d = distance(mob_get_x(idx),
-                                              mob_get_y(idx) - QUAD_HEIGHT_PX,
-                                              player_x, player_y);
+                    if (mob_quad_y > 0 &&
+                        map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
+                        uint8_t d = quad_distance(mob_quad_x, mob_quad_y - 1,
+                                                  player_quad_x, player_quad_y);
                         if (d < best_dist) {
                             best_dist = d;
-                            next_quad_x = cur_quad_x;
-                            next_quad_y = cur_quad_y - 1;
+                            next_quad_x = mob_quad_x;
+                            next_quad_y = mob_quad_y - 1;
                         }
                     }
                     break;
                 case SOUTH:
-                    if (check_map_tile(cur_quad_x, cur_quad_y + 1)) {
-                        uint16_t d = distance(mob_get_x(idx),
-                                              mob_get_y(idx) + QUAD_HEIGHT_PX,
-                                              player_x, player_y);
+                    if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
+                        map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
+                        uint8_t d = quad_distance(mob_quad_x, mob_quad_y + 1,
+                                                  player_quad_x, player_quad_y);
                         if (d < best_dist) {
                             best_dist = d;
-                            next_quad_x = cur_quad_x;
-                            next_quad_y = cur_quad_y + 1;
+                            next_quad_x = mob_quad_x;
+                            next_quad_y = mob_quad_y + 1;
                         }
                     }
                     break;
                 case EAST:
-                    if (check_map_tile(cur_quad_x + 1, cur_quad_y)) {
+                    if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
+                        map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
                         uint16_t d =
-                            distance(mob_get_x(idx) + QUAD_WIDTH_PX,
-                                     mob_get_y(idx), player_x, player_y);
+                            quad_distance(mob_quad_x + 1, mob_quad_y,
+                                          player_quad_x, player_quad_y);
                         if (d < best_dist) {
                             best_dist = d;
-                            next_quad_x = cur_quad_x + 1;
-                            next_quad_y = cur_quad_y;
+                            next_quad_x = mob_quad_x + 1;
+                            next_quad_y = mob_quad_y;
                         }
                     }
                     break;
                 case WEST:
-                    if (check_map_tile(cur_quad_x - 1, cur_quad_y)) {
+                    if (mob_quad_x > 0 &&
+                        map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
                         uint16_t d =
-                            distance(mob_get_x(idx) - QUAD_WIDTH_PX,
-                                     mob_get_y(idx), player_x, player_y);
+                            quad_distance(mob_quad_x - 1, mob_quad_y,
+                                          player_quad_x, player_quad_y);
                         if (d < best_dist) {
                             best_dist = d;
-                            next_quad_x = cur_quad_x - 1;
-                            next_quad_y = cur_quad_y;
+                            next_quad_x = mob_quad_x - 1;
+                            next_quad_y = mob_quad_y;
                         }
                     }
                     break;
@@ -198,31 +190,34 @@ static void skeleton_reached_target(uint8_t idx) {
         for (uint8_t i = 0; i < 4; i++) {
             switch ((r + i & 0x3)) {
                 case NORTH:
-                    if (check_map_tile(cur_quad_x, cur_quad_y - 1)) {
-                        next_quad_x = cur_quad_x;
-                        next_quad_y = cur_quad_y - 1;
+                    if (mob_quad_y > 0 &&
+                        map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
+                        next_quad_x = mob_quad_x;
+                        next_quad_y = mob_quad_y - 1;
                         goto done;
                     }
                     break;
                 case SOUTH:
-                    if (check_map_tile(cur_quad_x, cur_quad_y + 1)) {
-                        next_quad_x = cur_quad_x;
-                        next_quad_y = cur_quad_y + 1;
+                    if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
+                        map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
+                        next_quad_x = mob_quad_x;
+                        next_quad_y = mob_quad_y + 1;
                         goto done;
                     }
                     break;
                 case EAST:
-                    // East
-                    if (check_map_tile(cur_quad_x + 1, cur_quad_y)) {
-                        next_quad_x = cur_quad_x + 1;
-                        next_quad_y = cur_quad_y;
+                    if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
+                        map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
+                        next_quad_x = mob_quad_x + 1;
+                        next_quad_y = mob_quad_y;
                         goto done;
                     }
                     break;
                 case WEST:
-                    if (check_map_tile(cur_quad_x - 1, cur_quad_y)) {
-                        next_quad_x = cur_quad_x - 1;
-                        next_quad_y = cur_quad_y;
+                    if (mob_quad_x > 0 &&
+                        map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
+                        next_quad_x = mob_quad_x - 1;
+                        next_quad_y = mob_quad_y;
                         goto done;
                     }
                     break;
@@ -231,15 +226,13 @@ static void skeleton_reached_target(uint8_t idx) {
     }
 
 done:
-    mob_set_target(idx, QUAD_X_TO_PX(next_quad_x) + CENTER_SPRITE_X,
-                   QUAD_Y_TO_PX(next_quad_y) + CENTER_SPRITE_Y);
-    skeleton_data.target_quad_x[idx] = next_quad_x;
-    skeleton_data.target_quad_y[idx] = next_quad_y;
+    mob_set_target(idx, next_quad_x * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2,
+                   next_quad_y * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2);
 }
 
 static void skeleton_player_collision(uint8_t idx) {
-    enum direction dir =
-        dir_from(mob_get_x(idx), mob_get_y(idx), player_x, player_y);
+    enum direction dir = dir_from(mob_get_map_x(idx), mob_get_map_y(idx),
+                                  player_map_x, player_map_y);
     switch (dir) {
         case NORTH:
             damage_player_push(1, 0, -1);
@@ -294,8 +287,8 @@ static bool new_skeleton(void) {
         }
     } while (!map_tile_is_passable(quad_x, quad_y));
 
-    uint16_t x = QUAD_X_TO_PX(quad_x) + CENTER_SPRITE_X;
-    uint16_t y = QUAD_Y_TO_PX(quad_y) + CENTER_SPRITE_Y;
+    uint16_t x = quad_x * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2;
+    uint8_t y = quad_y * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
 
     uint8_t idx = create_skeleton(x, y);
     if (idx == MAX_MOBS) {
@@ -308,9 +301,6 @@ static bool new_skeleton(void) {
     mob_set_player_collision_handler(idx, skeleton_player_collision);
     mob_set_speed(idx, 1, 1 + (rand() & 0x3));
 
-    skeleton_data.target_quad_x[idx] = quad_x;
-    skeleton_data.target_quad_y[idx] = quad_y;
-
     skeleton_reached_target(idx);
 
     return true;
@@ -322,8 +312,8 @@ static void on_powerup_kill(uint8_t idx) {
 }
 
 static void on_skeleton_kill(uint8_t idx) {
-    uint16_t x = mob_get_x(idx);
-    uint16_t y = mob_get_y(idx);
+    uint16_t x = mob_get_map_x(idx);
+    uint8_t y = mob_get_map_y(idx);
     destroy_mob(idx);
 
     score += 10;
@@ -491,8 +481,9 @@ int main() {
                    COLOR_BLACK);
         draw_background(current_screen);
 
-        player_x = QUAD_X_TO_PX(PLAYER_START_X_QUAD) + CENTER_SPRITE_X;
-        player_y = QUAD_Y_TO_PX(PLAYER_START_Y_QUAD) + CENTER_SPRITE_Y;
+        player_map_x = PLAYER_START_X_QUAD * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2;
+        player_map_y =
+            PLAYER_START_Y_QUAD * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
         player_dir = SOUTH;
         player_sword_damage = 1;
         player_health = 6;
