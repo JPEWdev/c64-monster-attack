@@ -40,9 +40,8 @@ struct animation {
     uint8_t __unused;
 };
 
-_Static_assert(sizeof(struct animation) == 4, "Animation struct size must be power of 2");
-
-extern uint8_t sprite_collisions[8];
+_Static_assert(sizeof(struct animation) == 4,
+               "Animation struct size must be power of 2");
 
 void animate_step(uint8_t idx, struct animation* a, struct sprite const* s);
 void animate_pause(uint8_t idx, struct animation* a, struct sprite const* s);
