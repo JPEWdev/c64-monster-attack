@@ -177,7 +177,6 @@ uint8_t alloc_mob(void) {
 
 void destroy_mob(uint8_t idx) {
     mobs_in_use &= clrbit(idx);
-    sprite_enable_collisions(MOB_SPRITE_OFFSET + idx, false);
     hide_sprite(MOB_SPRITE_OFFSET + idx);
 }
 
@@ -205,7 +204,6 @@ void draw_mobs(void) {
             animate_step(sprite_idx, &mobs_animation[i], mobs_sprite[i]);
         } else {
             draw_sprite(sprite_idx, mobs_sprite[i], mobs_color[i]);
-            sprite_enable_collisions(MOB_SPRITE_OFFSET + i, true);
             mobs_needs_redraw[i] = false;
         }
 

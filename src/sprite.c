@@ -73,16 +73,6 @@ bool sprite_is_visible(uint8_t idx) {
     return (VICII_SPRITE_ENABLE & setbit(idx)) != 0;
 }
 
-static uint8_t sprite_collision_shadow = 0;
-void sprite_enable_collisions(uint8_t idx, bool enable) {
-    if (enable) {
-        sprite_collision_shadow |= setbit(idx);
-    } else {
-        sprite_collision_shadow &= clrbit(idx);
-    }
-    VICII_SPRITE_COLLISION_MMC = sprite_collision_shadow;
-}
-
 void draw_direction_sprite(uint8_t idx, struct direction_sprite const *sprite,
                            uint8_t color, enum direction direction) {
     draw_sprite(idx, sprite->sprites[direction], color);

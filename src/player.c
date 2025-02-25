@@ -51,8 +51,6 @@ void init_player(void) {
     draw_direction_sprite(PLAYER_SPRITE_IDX, current_player_sprite, COLOR_GREEN,
                           player_dir);
     move_sprite(PLAYER_SPRITE_IDX, player_get_x(), player_get_y());
-    sprite_enable_collisions(PLAYER_SPRITE_IDX, true);
-    sprite_enable_collisions(SWORD_SPRITE_IDX, true);
 
     player_animation.rate = 10;
     sword_animation.rate = 10;

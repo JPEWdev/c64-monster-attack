@@ -55,6 +55,5 @@ uint8_t animate_direction_sprite(uint8_t idx,
 void move_sprite(uint8_t idx, uint16_t x, uint16_t y);
 void hide_sprite(uint8_t idx);
 bool sprite_is_visible(uint8_t idx);
-void sprite_enable_collisions(uint8_t idx, bool enable);
 
 #endif  // SPRITE_H
