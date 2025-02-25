@@ -340,8 +340,19 @@ static void on_skeleton_kill(uint8_t idx) {
     }
 }
 
+#ifdef DEBUG
+static uint16_t get_raster(void) {
+    return (VICII_CTRL_1 & _BV(VICII_RST8_BIT)) << 1 | VICII_RASTER;
+}
+#endif
+
 void game_loop(void) {
     uint8_t last_coins_drawn = 0xFF;
+
+#ifdef DEBUG
+    uint16_t worst_raster_wait = 0xFFFF;
+    uint16_t raster_sum = 0;
+#endif
 
     score = 0;
     score_updated = true;
@@ -352,7 +363,24 @@ void game_loop(void) {
     while (true) {
         // Wait for next frame interrupt
         DEBUG_COLOR(COLOR_BLACK);
+
+#ifdef DEBUG
+        uint16_t raster_wait_start = get_raster();
+#endif
         frame_wait();
+#ifdef DEBUG
+        uint16_t raster_wait_end = get_raster();
+        // There is a change that we read the raster register right as it rolls
+        // over. If so, it will be zero. Rather than deal with this, ignore
+        // zeros
+        if (raster_wait_start && raster_wait_end) {
+            uint16_t elapsed = raster_wait_end - raster_wait_start;
+            if (elapsed < worst_raster_wait) {
+                worst_raster_wait = elapsed;
+            }
+            raster_sum += elapsed;
+        }
+#endif
 
         // Frame critical. These need to be done before the next frame
         // starts
@@ -390,6 +418,23 @@ void game_loop(void) {
 
             score_updated = false;
         }
+#ifdef DEBUG
+        if ((frame_count & 0x3F) == 0) {
+            char buf[14];
+            fill_char(SCORE_TEXT_X - 14, SCORE_TEXT_Y + 1, SCORE_TEXT_X,
+                      SCORE_TEXT_Y + 1, ' ');
+            raster_sum = raster_sum >> 6;
+            int_to_string(raster_sum, buf);
+            strcat(buf, "/");
+            int_to_string(worst_raster_wait, &buf[strlen(buf)]);
+            put_string_xy(SCORE_TEXT_X - strlen(buf), SCORE_TEXT_Y + 1,
+                          COLOR_CYAN, buf);
+        }
+
+        if (frame_count == 0) {
+            worst_raster_wait = 0xFFFF;
+        }
+#endif
 
         DEBUG_COLOR(COLOR_YELLOW);
         draw_mobs();
