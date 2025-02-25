@@ -45,7 +45,6 @@ static mob_action_handler mobs_on_reached_target[MAX_MOBS];
 static mob_update_handler mobs_on_update[MAX_MOBS];
 static uint8_t mobs_speed_counter[MAX_MOBS];
 static bool mobs_needs_redraw[MAX_MOBS];
-static uint8_t mobs_collisions[MAX_MOBS];
 static bool mobs_reached_target[MAX_MOBS];
 static uint8_t mobs_last_update_frame[MAX_MOBS];
 
@@ -166,7 +165,6 @@ uint8_t alloc_mob(void) {
 
             mobs_speed_counter[i] = 1;
             mobs_needs_redraw[i] = true;
-            mobs_collisions[i] = 0;
             mobs_reached_target[i] = false;
             mobs_last_update_frame[i] = frame_count;
             return i;
@@ -253,7 +251,6 @@ void update_mobs(void) {
         if ((mobs_in_use & setbit(i)) == 0) {
             continue;
         }
-        mobs_collisions[i] = 0;
 
         if (mobs_damage_counter[i]) {
             mobs_damage_counter[i]--;
@@ -323,55 +320,12 @@ void update_mobs(void) {
     }
 }
 
-void capture_mob_collisions(void) {
-    uint8_t sword_collisions = get_sword_collisions();
-    uint8_t player_collisions = get_player_collisions();
-
-    if (!sword_collisions && !player_collisions) {
-        return;
-    }
-
-    struct bb16 sword_bb16;
-    struct bb16 player_bb16;
-
-    if (sword_collisions) {
-        sword_bb16 = bb_add_offset(get_sword_bb(), sword_x, sword_y);
-    }
-
-    if (player_collisions) {
-        player_bb16 =
-            bb_add_offset(get_player_bb(), player_get_x(), player_get_y());
-    }
-
-    for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        if ((mobs_in_use & setbit(i)) == 0) {
-            continue;
-        }
-
-        uint8_t mob_mask = setbit(i + MOB_SPRITE_OFFSET);
-        if (((sword_collisions | player_collisions) & mob_mask) == 0) {
-            continue;
-        }
-
+bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
+    if (mobs_in_use & setbit(idx)) {
         const struct bb16 mob_bb =
-            bb_add_offset(&mobs_bb[i], mob_get_x(i), mob_get_y(i));
+            bb_add_offset(&mobs_bb[idx], mob_get_x(idx), mob_get_y(idx));
 
-        if ((sword_collisions & mob_mask) &&
-            bb16_intersect(&mob_bb, &sword_bb16)) {
-            mobs_collisions[i] |= _BV(SWORD_SPRITE_IDX);
-        }
-
-        if ((player_collisions & mob_mask) &&
-            bb16_intersect(&mob_bb, &player_bb16)) {
-            mobs_collisions[i] |= _BV(PLAYER_SPRITE_IDX);
-        }
-    }
-}
-
-bool check_mob_collision(uint8_t idx, uint8_t sprite_idx) {
-    if ((mobs_in_use & setbit(idx)) &&
-        (mobs_collisions[idx] & setbit(sprite_idx))) {
-        return true;
+        return bb16_intersect(&mob_bb, &bb);
     }
     return false;
 }

@@ -34,8 +34,8 @@ struct bb {
 };
 
 struct bb16 {
-    uint16_t north;
-    uint16_t south;
+    uint8_t north;
+    uint8_t south;
     uint16_t east;
     uint16_t west;
 };

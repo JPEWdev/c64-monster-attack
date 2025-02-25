@@ -386,8 +386,6 @@ void game_loop(void) {
         // starts
         DEBUG_COLOR(COLOR_RED);
 
-        capture_mob_collisions();
-
         draw_player();
 
         for (uint8_t i = 0; i < PLAYER_MAX_HEALTH / 2; i++) {
@@ -486,8 +484,6 @@ int main() {
     ISR_VECTOR = isr_handler;
 
     prepare_status_int();
-
-    vicii_interrupt_enable_next = _BV(VICII_RST_BIT) | _BV(VICII_MMC_BIT);
 
     vicii_raster_next = (DONE_INT_LINE & 0xFF);
 

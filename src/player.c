@@ -178,16 +178,22 @@ void update_player(void) {
     }
 
     if (sword_state == SWORD_VISIBLE) {
+        struct bb16 const sword_bb16 =
+            bb_add_offset(get_sword_bb(), sword_x, sword_y);
+
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
-            if (check_mob_collision(idx, SWORD_SPRITE_IDX)) {
+            if (check_mob_collision(idx, sword_bb16)) {
                 mob_trigger_sword_collision(idx, player_sword_damage);
                 sword_state = SWORD_ATTACKED;
             }
         }
     }
 
+    struct bb16 const player_bb16 =
+        bb_add_offset(get_player_bb(), player_get_x(), player_get_y());
+
     for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
-        if (check_mob_collision(idx, PLAYER_SPRITE_IDX)) {
+        if (check_mob_collision(idx, player_bb16)) {
             mob_trigger_player_collision(idx);
         }
     }

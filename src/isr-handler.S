@@ -35,9 +35,6 @@ raster_loop:
     lda vicii_ctrl_2_next
     sta VIC_CTRL2
 
-    lda vicii_interrupt_enable_next
-    sta VIC_IMR
-
     lda vicii_raster_next
     sta VIC_HLINE
 
@@ -47,35 +44,6 @@ raster_loop:
     sta VIC_IRR
 
 skip_rst:
-    ; Clear the MMC interrupt bit
-    lda #$04
-    sta VIC_IRR
-
-    ; Read collisions (clears the collision register)
-    lda $d01e
-    sta temp_collision
-
-    ; Check for sword collisions
-    lda #$01
-    and temp_collision
-    beq skip_sword_collisions
-
-    lda temp_collision
-    ora sword_collisions
-    sta sword_collisions
-
-skip_sword_collisions:
-
-    ; Check for player collisions
-    lda #$02
-    and temp_collision
-    beq skip_player_collisions
-
-    lda temp_collision
-    ora player_collisions
-    sta player_collisions
-
-skip_player_collisions:
 
 #ifdef DEBUG
     stx VIC_BORDERCOLOR

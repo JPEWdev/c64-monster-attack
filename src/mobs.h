@@ -50,7 +50,7 @@ void damage_mob(uint8_t idx, uint8_t damage);
 void damage_mob_pushback(uint8_t idx, uint8_t damage);
 void kill_mob(uint8_t idx);
 
-bool check_mob_collision(uint8_t idx, uint8_t sprite_idx);
+bool check_mob_collision(uint8_t idx, struct bb16 const bb);
 
 uint8_t create_skeleton(uint16_t map_x, uint8_t map_y);
 uint8_t create_coin(uint16_t map_x, uint8_t map_y, uint8_t value);

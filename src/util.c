@@ -54,8 +54,8 @@ struct bb16 bb_add_offset(struct bb const* bb, uint16_t x, uint16_t y) {
 }
 
 bool bb16_intersect(struct bb16 const* a, struct bb16 const* b) {
-    return (a->west <= b->east) && (b->west <= a->east) &&
-           (a->north <= b->south) && (b->north <= a->south);
+    return (a->north <= b->south) && (b->north <= a->south) &&
+           (a->west <= b->east) && (b->west <= a->east);
 }
 
 void int_to_string(int16_t i, char str[7]) {
