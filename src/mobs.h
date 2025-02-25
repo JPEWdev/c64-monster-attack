@@ -11,49 +11,45 @@
 
 #define FRAMES(f) ARRAY_SIZE(f), f
 
-struct mob;
+typedef void (*mob_sword_collision_handler)(uint8_t idx, uint8_t damage);
+typedef void (*mob_action_handler)(uint8_t idx);
+typedef void (*mob_update_handler)(uint8_t idx, uint8_t num_frames);
 
-typedef void (*mob_action_handler)(struct mob* mob);
+void mob_set_sprite(uint8_t idx, struct sprite const* sprite);
+struct sprite const* mob_get_sprite(uint8_t idx);
+void mob_set_bb(uint8_t idx, struct bb bb);
+void mob_set_position(uint8_t idx, uint16_t x, uint16_t y);
+uint16_t mob_get_x(uint8_t idx);
+uint16_t mob_get_y(uint8_t idx);
+void mob_set_hp(uint8_t idx, int8_t hp);
+void mob_set_color(uint8_t idx, uint8_t color);
+void mob_set_damage_color(uint8_t idx, uint8_t color);
+void mob_set_speed(uint8_t idx, uint8_t speed_pixels, uint8_t speed_frames);
+void mob_set_target(uint8_t idx, uint16_t x, uint16_t y);
+void mob_set_sword_collision_handler(uint8_t idx,
+                                     mob_sword_collision_handler handler);
+void mob_trigger_sword_collision(uint8_t idx, uint8_t damage);
+void mob_set_player_collision_handler(uint8_t idx, mob_action_handler handler);
+void mob_trigger_player_collision(uint8_t idx);
+void mob_set_death_handler(uint8_t idx, mob_action_handler handler);
+void mob_set_reached_target_handler(uint8_t idx, mob_action_handler handler);
+void mob_set_update_handler(uint8_t idx, mob_update_handler handler);
+void mob_set_animation_rate(uint8_t idx, uint8_t frames);
 
-struct mob {
-    uint8_t idx;
-    struct sprite const* sprite;
-    struct bb bb;
-    uint16_t x;
-    uint16_t y;
-    int8_t hp;
-    uint8_t color;
-    uint8_t damage_color;
-    uint8_t damage_counter;
-    uint8_t speed_pixels;
-    uint8_t speed_frames;
-    uint16_t target_x;
-    uint16_t target_y;
-    int8_t damage_push_x;
-    int8_t damage_push_y;
-    struct animation animation;
-    void (*on_sword_collision)(struct mob* mob, uint8_t damage);
-    mob_action_handler on_player_collision;
-    mob_action_handler on_death;
-    mob_action_handler on_reached_target;
-    void (*on_update)(struct mob* mob, uint8_t num_frames);
-};
-
-struct mob* alloc_mob(void);
-void destroy_mob(struct mob* mob);
+uint8_t alloc_mob(void);
+void destroy_mob(uint8_t idx);
 void destroy_all_mobs(void);
 void draw_mobs(void);
 void update_mobs(void);
 void capture_mob_collisions(void);
-void damage_mob(struct mob* mob, uint8_t damage);
-void damage_mob_pushback(struct mob* mob, uint8_t damage);
-void kill_mob(struct mob* mob);
+void damage_mob(uint8_t idx, uint8_t damage);
+void damage_mob_pushback(uint8_t idx, uint8_t damage);
+void kill_mob(uint8_t idx);
 
-struct mob* find_mob_by_sprite_idx(uint8_t sprite_idx);
-struct mob* check_mob_collision(uint8_t* idx, uint8_t sprite_idx);
+bool check_mob_collision(uint8_t idx, uint8_t sprite_idx);
 
-struct mob* create_skeleton(uint16_t x, uint16_t y);
-struct mob* create_coin(uint16_t x, uint16_t y, uint8_t value);
-struct mob* create_heart(uint16_t x, uint16_t y);
+uint8_t create_skeleton(uint16_t x, uint16_t y);
+uint8_t create_coin(uint16_t x, uint16_t y, uint8_t value);
+uint8_t create_heart(uint16_t x, uint16_t y);
 
 #endif

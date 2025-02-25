@@ -37,7 +37,10 @@ struct animation {
     uint8_t rate;
     uint8_t current_frame;
     uint8_t sprite_frame;
+    uint8_t __unused;
 };
+
+_Static_assert(sizeof(struct animation) == 4, "Animation struct size must be power of 2");
 
 extern uint8_t sprite_collisions[8];
 

@@ -98,9 +98,9 @@ static bool score_updated;
 #define CENTER_SPRITE_Y ((QUAD_HEIGHT_PX / 2) - (SPRITE_HEIGHT_PX / 2))
 
 static struct {
-    uint8_t target_quad_x;
-    uint8_t target_quad_y;
-} skeleton_data[MAX_MOBS];
+    uint8_t target_quad_x[MAX_MOBS];
+    uint8_t target_quad_y[MAX_MOBS];
+} skeleton_data;
 
 static bool check_map_tile(uint8_t x, uint8_t y) {
     return (x < MAP_WIDTH_QUAD && y < MAP_HEIGHT_QUAD &&
@@ -125,9 +125,9 @@ static uint16_t distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
     return xdist + ydist;
 }
 
-static void skeleton_reached_target(struct mob* mob) {
-    uint8_t cur_quad_x = skeleton_data[mob->idx].target_quad_x;
-    uint8_t cur_quad_y = skeleton_data[mob->idx].target_quad_y;
+static void skeleton_reached_target(uint8_t idx) {
+    uint8_t cur_quad_x = skeleton_data.target_quad_x[idx];
+    uint8_t cur_quad_y = skeleton_data.target_quad_y[idx];
     uint8_t next_quad_x = cur_quad_x;
     uint8_t next_quad_y = cur_quad_y;
 
@@ -142,7 +142,8 @@ static void skeleton_reached_target(struct mob* mob) {
             switch ((r + i & 0x3)) {
                 case NORTH:
                     if (check_map_tile(cur_quad_x, cur_quad_y - 1)) {
-                        uint16_t d = distance(mob->x, mob->y - QUAD_HEIGHT_PX,
+                        uint16_t d = distance(mob_get_x(idx),
+                                              mob_get_y(idx) - QUAD_HEIGHT_PX,
                                               player_x, player_y);
                         if (d < best_dist) {
                             best_dist = d;
@@ -153,7 +154,8 @@ static void skeleton_reached_target(struct mob* mob) {
                     break;
                 case SOUTH:
                     if (check_map_tile(cur_quad_x, cur_quad_y + 1)) {
-                        uint16_t d = distance(mob->x, mob->y + QUAD_HEIGHT_PX,
+                        uint16_t d = distance(mob_get_x(idx),
+                                              mob_get_y(idx) + QUAD_HEIGHT_PX,
                                               player_x, player_y);
                         if (d < best_dist) {
                             best_dist = d;
@@ -164,8 +166,9 @@ static void skeleton_reached_target(struct mob* mob) {
                     break;
                 case EAST:
                     if (check_map_tile(cur_quad_x + 1, cur_quad_y)) {
-                        uint16_t d = distance(mob->x + QUAD_WIDTH_PX, mob->y,
-                                              player_x, player_y);
+                        uint16_t d =
+                            distance(mob_get_x(idx) + QUAD_WIDTH_PX,
+                                     mob_get_y(idx), player_x, player_y);
                         if (d < best_dist) {
                             best_dist = d;
                             next_quad_x = cur_quad_x + 1;
@@ -175,8 +178,9 @@ static void skeleton_reached_target(struct mob* mob) {
                     break;
                 case WEST:
                     if (check_map_tile(cur_quad_x - 1, cur_quad_y)) {
-                        uint16_t d = distance(mob->x - QUAD_WIDTH_PX, mob->y,
-                                              player_x, player_y);
+                        uint16_t d =
+                            distance(mob_get_x(idx) - QUAD_WIDTH_PX,
+                                     mob_get_y(idx), player_x, player_y);
                         if (d < best_dist) {
                             best_dist = d;
                             next_quad_x = cur_quad_x - 1;
@@ -227,14 +231,15 @@ static void skeleton_reached_target(struct mob* mob) {
     }
 
 done:
-    mob->target_x = QUAD_X_TO_PX(next_quad_x) + CENTER_SPRITE_X;
-    mob->target_y = QUAD_Y_TO_PX(next_quad_y) + CENTER_SPRITE_Y;
-    skeleton_data[mob->idx].target_quad_x = next_quad_x;
-    skeleton_data[mob->idx].target_quad_y = next_quad_y;
+    mob_set_target(idx, QUAD_X_TO_PX(next_quad_x) + CENTER_SPRITE_X,
+                   QUAD_Y_TO_PX(next_quad_y) + CENTER_SPRITE_Y);
+    skeleton_data.target_quad_x[idx] = next_quad_x;
+    skeleton_data.target_quad_y[idx] = next_quad_y;
 }
 
-static void skeleton_player_collision(struct mob* mob) {
-    enum direction dir = dir_from(mob->x, mob->y, player_x, player_y);
+static void skeleton_player_collision(uint8_t idx) {
+    enum direction dir =
+        dir_from(mob_get_x(idx), mob_get_y(idx), player_x, player_y);
     switch (dir) {
         case NORTH:
             damage_player_push(1, 0, -1);
@@ -253,7 +258,7 @@ static void skeleton_player_collision(struct mob* mob) {
     }
 }
 
-static void on_skeleton_kill(struct mob* mob);
+static void on_skeleton_kill(uint8_t idx);
 
 static bool new_skeleton(void) {
     uint8_t quad_x;
@@ -292,51 +297,50 @@ static bool new_skeleton(void) {
     uint16_t x = QUAD_X_TO_PX(quad_x) + CENTER_SPRITE_X;
     uint16_t y = QUAD_Y_TO_PX(quad_y) + CENTER_SPRITE_Y;
 
-    struct mob* mob = create_skeleton(x, y);
-    if (!mob) {
+    uint8_t idx = create_skeleton(x, y);
+    if (idx == MAX_MOBS) {
         return false;
     }
 
-    mob->on_death = on_skeleton_kill;
-    mob->target_x = x;
-    mob->target_y = y;
-    mob->on_reached_target = skeleton_reached_target;
-    mob->on_player_collision = skeleton_player_collision;
-    mob->speed_pixels = 1;
-    mob->speed_frames = 1 + (rand() & 0x3);
-    skeleton_data[mob->idx].target_quad_x = quad_x;
-    skeleton_data[mob->idx].target_quad_y = quad_y;
+    mob_set_death_handler(idx, on_skeleton_kill);
+    mob_set_target(idx, x, y);
+    mob_set_reached_target_handler(idx, skeleton_reached_target);
+    mob_set_player_collision_handler(idx, skeleton_player_collision);
+    mob_set_speed(idx, 1, 1 + (rand() & 0x3));
 
-    skeleton_reached_target(mob);
+    skeleton_data.target_quad_x[idx] = quad_x;
+    skeleton_data.target_quad_y[idx] = quad_y;
+
+    skeleton_reached_target(idx);
 
     return true;
 }
 
-static void on_powerup_kill(struct mob* mob) {
-    destroy_mob(mob);
+static void on_powerup_kill(uint8_t idx) {
+    destroy_mob(idx);
     new_skeleton();
 }
 
-static void on_skeleton_kill(struct mob* mob) {
-    uint16_t x = mob->x;
-    uint16_t y = mob->y;
-    destroy_mob(mob);
+static void on_skeleton_kill(uint8_t idx) {
+    uint16_t x = mob_get_x(idx);
+    uint16_t y = mob_get_y(idx);
+    destroy_mob(idx);
 
     score += 10;
     score_updated = true;
 
     switch (rand() & 0x3) {
         case 0:
-            mob = create_coin(x, y, 1);
-            if (mob) {
-                mob->on_death = on_powerup_kill;
+            idx = create_coin(x, y, 1);
+            if (idx != MAX_MOBS) {
+                mob_set_death_handler(idx, on_powerup_kill);
             }
             break;
 
         case 1:
-            mob = create_heart(x, y);
-            if (mob) {
-                mob->on_death = on_powerup_kill;
+            idx = create_heart(x, y);
+            if (idx != MAX_MOBS) {
+                mob_set_death_handler(idx, on_powerup_kill);
             }
             break;
 

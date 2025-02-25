@@ -162,23 +162,17 @@ void update_player(void) {
     }
 
     if (sword_state == SWORD_VISIBLE) {
-        uint8_t idx = 0;
-        struct mob* m;
-        while ((m = check_mob_collision(&idx, SWORD_SPRITE_IDX)) != NULL) {
-            if (m->on_sword_collision) {
-                m->on_sword_collision(m, player_sword_damage);
+        for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
+            if (check_mob_collision(idx, SWORD_SPRITE_IDX)) {
+                mob_trigger_sword_collision(idx, player_sword_damage);
+                sword_state = SWORD_ATTACKED;
             }
-            sword_state = SWORD_ATTACKED;
         }
     }
 
-    {
-        uint8_t idx = 0;
-        struct mob* m;
-        while ((m = check_mob_collision(&idx, PLAYER_SPRITE_IDX)) != NULL) {
-            if (m->on_player_collision) {
-                m->on_player_collision(m);
-            }
+    for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
+        if (check_mob_collision(idx, PLAYER_SPRITE_IDX)) {
+            mob_trigger_player_collision(idx);
         }
     }
 
