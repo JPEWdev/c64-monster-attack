@@ -498,8 +498,6 @@ int main() {
         player_health = 6;
         player_full_health = 6;
         player_coins = 0;
-        sword_state = SWORD_AWAY;
-        player_temp_invulnerable = 0;
 
         init_player();
 

@@ -55,6 +55,11 @@ void init_player(void) {
 
     player_animation.rate = 10;
     sword_animation.rate = 10;
+    player_push_x = 0;
+    player_push_y = 0;
+    player_push_timer = 0;
+    sword_state = SWORD_AWAY;
+    player_temp_invulnerable = 0;
 }
 
 bool damage_player(uint8_t damage) {
@@ -179,58 +184,60 @@ void update_player(void) {
     int8_t move_delta_x = player_push_x;
     int8_t move_delta_y = player_push_y;
 
-    uint8_t m = read_joystick_2();
-    if (m & _BV(JOYSTICK_FIRE_BIT)) {
-        if (sword_state == SWORD_AWAY) {
-            sword_state = SWORD_VISIBLE;
-        }
-        if (m & _BV(JOYSTICK_UP_BIT)) {
-            move_delta_y -= PLAYER_SPEED / 2;
-        }
-        if (m & _BV(JOYSTICK_DOWN_BIT)) {
-            move_delta_y += PLAYER_SPEED / 2;
-        }
-        if (m & _BV(JOYSTICK_LEFT_BIT)) {
-            move_delta_x -= PLAYER_SPEED / 2;
-        }
-        if (m & _BV(JOYSTICK_RIGHT_BIT)) {
-            move_delta_x += PLAYER_SPEED / 2;
-        }
-    } else {
-        uint8_t new_dir = DIRECTION_COUNT;
-        sword_state = SWORD_AWAY;
-
-        if (m & _BV(JOYSTICK_UP_BIT)) {
-            new_dir = NORTH;
-        } else if (m & _BV(JOYSTICK_DOWN_BIT)) {
-            new_dir = SOUTH;
-        } else if (m & _BV(JOYSTICK_LEFT_BIT)) {
-            new_dir = WEST;
-        } else if (m & _BV(JOYSTICK_RIGHT_BIT)) {
-            new_dir = EAST;
-        }
-
-        if (new_dir == player_dir) {
-            switch (new_dir) {
-                case NORTH:
-                    move_delta_y -= PLAYER_SPEED;
-                    break;
-
-                case SOUTH:
-                    move_delta_y += PLAYER_SPEED;
-                    break;
-
-                case EAST:
-                    move_delta_x += PLAYER_SPEED;
-                    break;
-
-                case WEST:
-                    move_delta_x -= PLAYER_SPEED;
-                    break;
+    if (player_health) {
+        uint8_t m = read_joystick_2();
+        if (m & _BV(JOYSTICK_FIRE_BIT)) {
+            if (sword_state == SWORD_AWAY) {
+                sword_state = SWORD_VISIBLE;
+            }
+            if (m & _BV(JOYSTICK_UP_BIT)) {
+                move_delta_y -= PLAYER_SPEED / 2;
+            }
+            if (m & _BV(JOYSTICK_DOWN_BIT)) {
+                move_delta_y += PLAYER_SPEED / 2;
+            }
+            if (m & _BV(JOYSTICK_LEFT_BIT)) {
+                move_delta_x -= PLAYER_SPEED / 2;
+            }
+            if (m & _BV(JOYSTICK_RIGHT_BIT)) {
+                move_delta_x += PLAYER_SPEED / 2;
             }
         } else {
-            if (new_dir != DIRECTION_COUNT) {
-                player_dir = new_dir;
+            uint8_t new_dir = DIRECTION_COUNT;
+            sword_state = SWORD_AWAY;
+
+            if (m & _BV(JOYSTICK_UP_BIT)) {
+                new_dir = NORTH;
+            } else if (m & _BV(JOYSTICK_DOWN_BIT)) {
+                new_dir = SOUTH;
+            } else if (m & _BV(JOYSTICK_LEFT_BIT)) {
+                new_dir = WEST;
+            } else if (m & _BV(JOYSTICK_RIGHT_BIT)) {
+                new_dir = EAST;
+            }
+
+            if (new_dir == player_dir) {
+                switch (new_dir) {
+                    case NORTH:
+                        move_delta_y -= PLAYER_SPEED;
+                        break;
+
+                    case SOUTH:
+                        move_delta_y += PLAYER_SPEED;
+                        break;
+
+                    case EAST:
+                        move_delta_x += PLAYER_SPEED;
+                        break;
+
+                    case WEST:
+                        move_delta_x -= PLAYER_SPEED;
+                        break;
+                }
+            } else {
+                if (new_dir != DIRECTION_COUNT) {
+                    player_dir = new_dir;
+                }
             }
         }
     }
