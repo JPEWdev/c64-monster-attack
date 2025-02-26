@@ -67,22 +67,10 @@ static const char game_over_text[] = "GAME OVER";
 
 static const char score_text[] = "SCORE ";
 
-void prepare_status_int(void) {
-    VICII_BG_0 = COLOR_BLACK;
-    VICII_CTRL_1 = DEFAULT_VICII_CTRL_1;
-    VICII_CTRL_2 = DEFAULT_VICII_CTRL_2;
-    VICII_INTERRUPT_ENABLE = _BV(VICII_RST_BIT);
-    VICII_RASTER = STATUS_INT_LINE;
-}
-
 void frame_wait(void) {
-    static uint8_t next_interrupt = 0;
-    while (interrupt_count == next_interrupt);
-    while (interrupt_count == next_interrupt + 1);
-    next_interrupt = interrupt_count;
-    frame_count++;
-
-    prepare_status_int();
+    static uint8_t next_frame = 0;
+    while (*(volatile uint8_t*)&frame_count == next_frame);
+    next_frame = frame_count;
 }
 
 void wait_frames(uint16_t num_frames) {
@@ -483,17 +471,6 @@ int main() {
     // Configure interrupts
     ISR_VECTOR = isr_handler;
 
-    prepare_status_int();
-
-    vicii_raster_next = (DONE_INT_LINE & 0xFF);
-
-    vicii_ctrl_1_next = DEFAULT_VICII_CTRL_1;
-    vicii_ctrl_1_next &= ~_BV(VICII_RST8_BIT);
-    vicii_ctrl_1_next |= (DONE_INT_LINE >> 8) << VICII_RST8_BIT;
-
-    // Enable multicolor character mode
-    vicii_ctrl_2_next = DEFAULT_VICII_CTRL_2 | _BV(VICII_MCM_BIT);
-
     // Disable all CIA interrupts
     CIA_1_INTERRUPT = 0x7F;
     CIA_2_INTERRUPT = 0x7F;
@@ -511,6 +488,25 @@ int main() {
     VICII_SPRITE_MULTICOLOR_1 = COLOR_BLACK;
 
     current_screen = &main_screen;
+
+    VICII_BG_0 = COLOR_BLACK;
+    VICII_CTRL_1 = DEFAULT_VICII_CTRL_1;
+    VICII_CTRL_2 = DEFAULT_VICII_CTRL_2;
+    VICII_INTERRUPT_ENABLE = _BV(VICII_RST_BIT);
+
+    prepare_raster_cmds();
+    {
+        uint8_t idx = alloc_raster_cmd(STATUS_INT_LINE);
+        raster_set_vicii_bg_color(idx, current_screen->bg_color_0);
+        raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2 | _BV(VICII_MCM_BIT));
+    }
+
+    {
+        uint8_t idx = alloc_raster_cmd(DONE_INT_LINE);
+        raster_set_vicii_bg_color(idx, COLOR_BLACK);
+        raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2);
+    }
+    finish_raster_cmds();
 
     enable_interrupts();
     frame_wait();

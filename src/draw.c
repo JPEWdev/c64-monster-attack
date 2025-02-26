@@ -169,7 +169,6 @@ void draw_map_quad(uint8_t x, uint8_t y, uint8_t image, uint8_t color) {
 }
 
 void draw_background(struct map_screen const *screen) {
-    vicii_bg_0_next = screen->bg_color_0;
     VICII_BG_1 = screen->bg_color_1;
     VICII_BG_2 = screen->bg_color_2;
 
