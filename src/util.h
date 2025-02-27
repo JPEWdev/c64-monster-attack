@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "bcd.h"
+
 #define ARRAY_SIZE(arr) ((sizeof(arr)) / (sizeof(arr[0])))
 
 #define _BV(bit) (1 << (bit))
@@ -52,6 +54,7 @@ struct bb16 bb_add_offset(struct bb const* bb, uint16_t x, uint16_t y);
 bool bb16_intersect(struct bb16 const* a, struct bb16 const* b);
 
 void int_to_string(int16_t i, char str[7]);
+uint8_t bcd_u16_to_string(bcd_u16 i, char str[5]);
 
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y);

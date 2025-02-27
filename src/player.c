@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 
+#include "bcd.h"
 #include "input.h"
 #include "map.h"
 #include "mobs.h"
@@ -22,8 +23,8 @@ uint8_t player_map_y;
 enum direction player_dir = SOUTH;
 uint8_t player_sword_damage;
 uint8_t player_health;
+bool player_health_changed;
 uint8_t player_full_health;
-uint8_t player_coins;
 uint8_t player_temp_invulnerable;
 static int8_t player_push_x;
 static int8_t player_push_y;
@@ -32,6 +33,9 @@ static uint8_t player_frame;
 static uint8_t player_animation_counter;
 static uint8_t sword_frame;
 static uint8_t sword_animation_counter;
+
+static bcd_u16 player_coins;
+bool player_coins_changed;
 
 uint8_t sword_state;
 uint16_t sword_x = 0;
@@ -76,6 +80,7 @@ bool damage_player(uint8_t damage) {
     } else {
         player_health -= damage;
     }
+    player_health_changed = true;
 
     player_temp_invulnerable = 30;
     return true;
@@ -96,6 +101,7 @@ void heal_player(uint8_t health) {
     if (player_health > player_full_health) {
         player_health = player_full_health;
     }
+    player_health_changed = true;
 }
 
 uint16_t player_get_x(void) {
@@ -109,6 +115,21 @@ uint8_t player_get_y(void) {
 uint8_t player_get_quad_x(void) { return player_map_x / QUAD_WIDTH_PX; }
 
 uint8_t player_get_quad_y(void) { return player_map_y / QUAD_HEIGHT_PX; }
+
+bcd_u16 player_get_coins(void) { return player_coins; }
+
+void player_set_coins(bcd_u16 coins) {
+    player_coins = coins;
+    player_coins_changed = true;
+}
+
+void player_add_coins(bcd_u16 coins) {
+    if (!coins) {
+        return;
+    }
+    player_coins = bcd_add_u16(player_coins, coins);
+    player_coins_changed = true;
+}
 
 void draw_player(void) {
     uint8_t sprite_enable = VICII_SPRITE_ENABLE & 0xFC;

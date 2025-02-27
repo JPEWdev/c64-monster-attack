@@ -17,40 +17,16 @@ void put_char_xy(uint8_t x, uint8_t y, uint8_t c) {
     }
 }
 
-void put_string_xy(uint8_t x, uint8_t y, uint8_t color, char const *c) {
-    while (*c) {
-        switch (*c & 0x70) {
-            case 0x00:
-            case 0x10:
-                // Control Character
-                put_char_xy(x, y, 0x20);
-                break;
-
-            case 0x20:
-                // Symbols
-                put_char_xy(x, y, *c);
-                break;
-
-            case 0x30:
-                // Numbers
-                put_char_xy(x, y, *c);
-                break;
-
-            case 0x40:
-            case 0x50:
-                // Upper case
-                put_char_xy(x, y, *c & 0x1F);
-                break;
-
-            case 0x60:
-            case 0x70:
-                // Lower case
-                put_char_xy(x, y, *c & 0x1F);
-                break;
+void put_string_xy(uint8_t x, uint8_t y, char const *c) {
+    uint8_t *p = &screen_data[y][x];
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() {
+            while (*c) {
+                *p = *c;
+                p++;
+                c++;
+            }
         }
-        set_color(x, y, color);
-        x++;
-        c++;
     }
 }
 

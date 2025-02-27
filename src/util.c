@@ -95,6 +95,35 @@ void int_to_string(int16_t i, char str[7]) {
     }
 }
 
+static uint8_t add_bcd_char(uint8_t v, char* c, bool* lead_zero) {
+    if (!*lead_zero && !v) {
+        return 0;
+    }
+    if (v < 10) {
+        *c = '0' + v;
+        *lead_zero = true;
+        return 1;
+    }
+    *c = 'X';
+    return 1;
+}
+
+uint8_t bcd_u16_to_string(bcd_u16 i, char str[5]) {
+    if (i == 0) {
+        str[0] = '0';
+        str[1] = '\0';
+        return 1;
+    }
+    char* c = str;
+    bool lead_zero = false;
+    c += add_bcd_char(i >> 12, c, &lead_zero);
+    c += add_bcd_char((i >> 8) & 0xF, c, &lead_zero);
+    c += add_bcd_char((i >> 4) & 0xF, c, &lead_zero);
+    c += add_bcd_char(i & 0xF, c, &lead_zero);
+    *c = '\0';
+    return c - str;
+}
+
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y) {
     int8_t delta_x = from_x - to_x;

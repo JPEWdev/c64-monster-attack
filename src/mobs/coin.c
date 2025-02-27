@@ -1,3 +1,4 @@
+#include "bcd.h"
 #include "coin.spm.h"
 #include "mobs.h"
 #include "player.h"
@@ -5,17 +6,17 @@
 static const struct sprite coin = COIN_SPRITE;
 
 static struct {
-    uint8_t value[MAX_MOBS];
+    bcd_u8 value[MAX_MOBS];
     int16_t ttl[MAX_MOBS];
 } coin_data;
 
 static void coin_sword_collision(uint8_t idx, uint8_t damage) {
-    player_coins += coin_data.value[idx];
+    player_add_coins(coin_data.value[idx]);
     kill_mob(idx);
 }
 
 static void coin_player_collision(uint8_t idx) {
-    player_coins += coin_data.value[idx];
+    player_add_coins(coin_data.value[idx]);
     kill_mob(idx);
 }
 
@@ -31,7 +32,7 @@ static void coin_update(uint8_t idx, uint8_t num_frames) {
     }
 }
 
-uint8_t create_coin(uint16_t map_x, uint8_t map_y, uint8_t value) {
+uint8_t create_coin(uint16_t map_x, uint8_t map_y, bcd_u8 value) {
     uint8_t idx = alloc_mob();
     if (idx == MAX_MOBS) {
         return idx;

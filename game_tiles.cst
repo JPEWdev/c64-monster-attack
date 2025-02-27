@@ -1,399 +1,399 @@
 <?xml version="1.0" encoding="utf-8"?>
 <charset>
   <FileVersion>2</FileVersion>
-  <BK1>57</BK1>
-  <BK2>27</BK2>
-  <Col3>67</Col3>
+  <BK1>27</BK1>
+  <BK2>57</BK2>
+  <Col3>27</Col3>
   <Reversed>False</Reversed>
-  <Multicolour>True</Multicolour>
+  <Multicolour>False</Multicolour>
   <Uppercase>True</Uppercase>
   <character>
     <charcode>0</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>110</data>
-      <data>110</data>
-      <data>96</data>
-      <data>98</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>1</charcode>
     <chardata>
+      <data>48</data>
+      <data>120</data>
+      <data>112</data>
+      <data>120</data>
+      <data>48</data>
       <data>24</data>
-      <data>60</data>
-      <data>102</data>
-      <data>126</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>2</charcode>
     <chardata>
-      <data>124</data>
-      <data>102</data>
-      <data>102</data>
-      <data>124</data>
-      <data>102</data>
-      <data>102</data>
-      <data>124</data>
+      <data>54</data>
+      <data>127</data>
+      <data>127</data>
+      <data>127</data>
+      <data>62</data>
+      <data>28</data>
+      <data>8</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>3</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
-      <data>102</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>4</charcode>
     <chardata>
-      <data>120</data>
-      <data>108</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>108</data>
-      <data>120</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>5</charcode>
     <chardata>
-      <data>126</data>
-      <data>96</data>
-      <data>96</data>
-      <data>120</data>
-      <data>96</data>
-      <data>96</data>
-      <data>126</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>6</charcode>
     <chardata>
-      <data>126</data>
-      <data>96</data>
-      <data>96</data>
-      <data>120</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>7</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>96</data>
-      <data>110</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>8</charcode>
     <chardata>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>126</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>9</charcode>
     <chardata>
-      <data>60</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>10</charcode>
     <chardata>
-      <data>30</data>
-      <data>12</data>
-      <data>12</data>
-      <data>12</data>
-      <data>12</data>
-      <data>108</data>
-      <data>56</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>11</charcode>
     <chardata>
-      <data>102</data>
-      <data>108</data>
-      <data>120</data>
-      <data>112</data>
-      <data>120</data>
-      <data>108</data>
-      <data>102</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>12</charcode>
     <chardata>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
-      <data>126</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>13</charcode>
     <chardata>
-      <data>99</data>
-      <data>119</data>
-      <data>127</data>
-      <data>107</data>
-      <data>99</data>
-      <data>99</data>
-      <data>99</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>14</charcode>
     <chardata>
-      <data>102</data>
-      <data>118</data>
-      <data>126</data>
-      <data>126</data>
-      <data>110</data>
-      <data>102</data>
-      <data>102</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>15</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>16</charcode>
     <chardata>
-      <data>124</data>
-      <data>102</data>
-      <data>102</data>
-      <data>124</data>
-      <data>96</data>
-      <data>96</data>
-      <data>96</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>17</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
-      <data>14</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>18</charcode>
     <chardata>
-      <data>124</data>
-      <data>102</data>
-      <data>102</data>
-      <data>124</data>
-      <data>120</data>
-      <data>108</data>
-      <data>102</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>19</charcode>
     <chardata>
-      <data>60</data>
-      <data>102</data>
-      <data>96</data>
-      <data>60</data>
-      <data>6</data>
-      <data>102</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>20</charcode>
     <chardata>
-      <data>126</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>21</charcode>
     <chardata>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>22</charcode>
     <chardata>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
-      <data>24</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>23</charcode>
     <chardata>
-      <data>99</data>
-      <data>99</data>
-      <data>99</data>
-      <data>107</data>
-      <data>127</data>
-      <data>119</data>
-      <data>99</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>24</charcode>
     <chardata>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
-      <data>24</data>
-      <data>60</data>
-      <data>102</data>
-      <data>102</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>25</charcode>
     <chardata>
-      <data>102</data>
-      <data>102</data>
-      <data>102</data>
-      <data>60</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>26</charcode>
     <chardata>
-      <data>126</data>
-      <data>6</data>
-      <data>12</data>
-      <data>24</data>
-      <data>48</data>
-      <data>96</data>
-      <data>126</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>27</charcode>
     <chardata>
-      <data>60</data>
-      <data>48</data>
-      <data>48</data>
-      <data>48</data>
-      <data>48</data>
-      <data>48</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>28</charcode>
     <chardata>
-      <data>12</data>
-      <data>18</data>
-      <data>48</data>
-      <data>124</data>
-      <data>48</data>
-      <data>98</data>
-      <data>252</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>29</charcode>
     <chardata>
-      <data>60</data>
-      <data>12</data>
-      <data>12</data>
-      <data>12</data>
-      <data>12</data>
-      <data>12</data>
-      <data>60</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
@@ -401,25 +401,25 @@
     <charcode>30</charcode>
     <chardata>
       <data>0</data>
-      <data>24</data>
-      <data>60</data>
-      <data>126</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
-      <data>24</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>31</charcode>
     <chardata>
       <data>0</data>
-      <data>16</data>
-      <data>48</data>
-      <data>127</data>
-      <data>127</data>
-      <data>48</data>
-      <data>16</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
+      <data>0</data>
       <data>0</data>
     </chardata>
   </character>
@@ -842,390 +842,390 @@
   <character>
     <charcode>64</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>102</data>
+      <data>110</data>
+      <data>110</data>
+      <data>96</data>
+      <data>98</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>65</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>24</data>
+      <data>60</data>
+      <data>102</data>
+      <data>126</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>66</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>124</data>
+      <data>102</data>
+      <data>102</data>
+      <data>124</data>
+      <data>102</data>
+      <data>102</data>
+      <data>124</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>67</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>102</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
+      <data>102</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>68</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>120</data>
+      <data>108</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>108</data>
+      <data>120</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>69</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>126</data>
+      <data>96</data>
+      <data>96</data>
+      <data>120</data>
+      <data>96</data>
+      <data>96</data>
+      <data>126</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>70</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>126</data>
+      <data>96</data>
+      <data>96</data>
+      <data>120</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>71</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>102</data>
+      <data>96</data>
+      <data>110</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>72</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>126</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>73</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>74</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>30</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
+      <data>108</data>
+      <data>56</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>75</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>108</data>
+      <data>120</data>
+      <data>112</data>
+      <data>120</data>
+      <data>108</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>76</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
+      <data>126</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>77</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>99</data>
+      <data>119</data>
+      <data>127</data>
+      <data>107</data>
+      <data>99</data>
+      <data>99</data>
+      <data>99</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>78</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>118</data>
+      <data>126</data>
+      <data>126</data>
+      <data>110</data>
+      <data>102</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>79</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>80</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>124</data>
+      <data>102</data>
+      <data>102</data>
+      <data>124</data>
+      <data>96</data>
+      <data>96</data>
+      <data>96</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>81</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
+      <data>14</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>82</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>124</data>
+      <data>102</data>
+      <data>102</data>
+      <data>124</data>
+      <data>120</data>
+      <data>108</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>83</charcode>
     <chardata>
-      <data>54</data>
-      <data>127</data>
-      <data>127</data>
-      <data>127</data>
-      <data>62</data>
-      <data>28</data>
-      <data>8</data>
+      <data>60</data>
+      <data>102</data>
+      <data>96</data>
+      <data>60</data>
+      <data>6</data>
+      <data>102</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>84</charcode>
     <chardata>
-      <data>48</data>
-      <data>120</data>
-      <data>112</data>
-      <data>120</data>
-      <data>48</data>
+      <data>126</data>
       <data>24</data>
-      <data>0</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>85</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>86</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
+      <data>24</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>87</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>99</data>
+      <data>99</data>
+      <data>99</data>
+      <data>107</data>
+      <data>127</data>
+      <data>119</data>
+      <data>99</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>88</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
+      <data>24</data>
+      <data>60</data>
+      <data>102</data>
+      <data>102</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>89</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>102</data>
+      <data>102</data>
+      <data>102</data>
+      <data>60</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>90</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>126</data>
+      <data>6</data>
+      <data>12</data>
+      <data>24</data>
+      <data>48</data>
+      <data>96</data>
+      <data>126</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>91</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>48</data>
+      <data>48</data>
+      <data>48</data>
+      <data>48</data>
+      <data>48</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>92</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>12</data>
+      <data>18</data>
+      <data>48</data>
+      <data>124</data>
+      <data>48</data>
+      <data>98</data>
+      <data>252</data>
       <data>0</data>
     </chardata>
   </character>
   <character>
     <charcode>93</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>60</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
+      <data>60</data>
       <data>0</data>
     </chardata>
   </character>
@@ -1233,25 +1233,25 @@
     <charcode>94</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>24</data>
+      <data>60</data>
+      <data>126</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
+      <data>24</data>
     </chardata>
   </character>
   <character>
     <charcode>95</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>16</data>
+      <data>48</data>
+      <data>127</data>
+      <data>127</data>
+      <data>48</data>
+      <data>16</data>
       <data>0</data>
     </chardata>
   </character>
@@ -1832,10 +1832,10 @@
     <chardata>
       <data>0</data>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>48</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
       <data>0</data>
       <data>0</data>
     </chardata>
@@ -1846,10 +1846,10 @@
       <data>0</data>
       <data>0</data>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>48</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
       <data>0</data>
     </chardata>
   </character>
@@ -1858,10 +1858,10 @@
     <chardata>
       <data>0</data>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>192</data>
+      <data>48</data>
+      <data>48</data>
+      <data>48</data>
       <data>0</data>
       <data>0</data>
     </chardata>
@@ -1869,14 +1869,14 @@
   <character>
     <charcode>143</charcode>
     <chardata>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>192</data>
+      <data>48</data>
+      <data>48</data>
+      <data>48</data>
+      <data>3</data>
+      <data>12</data>
+      <data>12</data>
+      <data>12</data>
     </chardata>
   </character>
   <character>

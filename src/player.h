@@ -7,6 +7,7 @@
 #include <cbm.h>
 #include <stdint.h>
 
+#include "bcd.h"
 #include "sprite.h"
 #include "util.h"
 
@@ -31,8 +32,9 @@ extern uint8_t player_map_y;
 extern enum direction player_dir;
 extern uint8_t player_sword_damage;
 extern uint8_t player_health;
+extern bool player_health_changed;
 extern uint8_t player_full_health;
-extern uint8_t player_coins;
+extern bool player_coins_changed;
 extern uint8_t player_temp_invulnerable;
 
 extern uint8_t sword_state;
@@ -44,6 +46,9 @@ uint16_t player_get_x(void);
 uint8_t player_get_y(void);
 uint8_t player_get_quad_x(void);
 uint8_t player_get_quad_y(void);
+bcd_u16 player_get_coins(void);
+void player_set_coins(bcd_u16 coins);
+void player_add_coins(bcd_u16 coins);
 bool damage_player(uint8_t damage);
 void damage_player_push(uint8_t damage, int8_t push_x, int8_t push_y);
 void heal_player(uint8_t health);

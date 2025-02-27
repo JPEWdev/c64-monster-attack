@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bcd.h"
 #include "draw.h"
 #include "input.h"
 #include "isr.h"
@@ -28,11 +29,9 @@
 #define DEFAULT_VICII_CTRL_1 (0x1B)
 #define DEFAULT_VICII_CTRL_2 (0xC8)
 
-#define HEART_CHAR (0x53)
-#define HALF_HEART_CHAR (0x54)
+#define HEART_CHAR (0x2)
+#define HALF_HEART_CHAR (0x1)
 #define BLANK_CHAR (0x20)
-#define ZERO_CHAR (0x30)
-#define DOLLAR_CHAR (0x24)
 
 #define HEALTH_X_TILE (0)
 #define HEALTH_Y_TILE (0)
@@ -65,8 +64,6 @@ static const char game_over_text[] = "GAME OVER";
 #define SCORE_TEXT_X (SCREEN_WIDTH_TILE)
 #define SCORE_TEXT_Y (0)
 
-static const char score_text[] = "SCORE ";
-
 void frame_wait(void) {
     static uint8_t next_frame = 0;
     while (*(volatile uint8_t*)&frame_count == next_frame);
@@ -79,7 +76,7 @@ void wait_frames(uint16_t num_frames) {
     }
 }
 
-static uint16_t score = 0;
+static bcd_u16 score = 0;
 static bool score_updated;
 
 static uint8_t quad_distance(uint8_t quad_x1, uint8_t quad_y1, uint8_t quad_x2,
@@ -304,12 +301,12 @@ static void on_skeleton_kill(uint8_t idx) {
     uint8_t y = mob_get_map_y(idx);
     destroy_mob(idx);
 
-    score += 10;
+    score = bcd_add_u16(score, BCD8(10));
     score_updated = true;
 
     switch (rand() & 0x3) {
         case 0:
-            idx = create_coin(x, y, 1);
+            idx = create_coin(x, y, BCD8(1));
             if (idx != MAX_MOBS) {
                 mob_set_death_handler(idx, on_powerup_kill);
             }
@@ -346,19 +343,59 @@ static uint16_t get_raster(void) {
 }
 #endif
 
+static uint8_t fast_strlen(char* s) {
+    uint8_t i;
+    for (i = 0; s[i]; i++);
+    return i;
+}
+
+static void pad_string(char* str, uint8_t size, uint8_t offset) {
+    for (uint8_t i = offset; i < size - 1; i++) {
+        str[i] = ' ';
+    }
+
+    str[size - 1] = '\0';
+}
+
 void game_loop(void) {
-    uint8_t last_coins_drawn = 0xFF;
+    bool draw_coins = false;
+    char coin_string_buf[] = "$####";
+
+    bool draw_score = false;
+    char score_string_buf[] = "    SCORE ####";
+
+    bool draw_health = false;
+    char health_string_buf[(PLAYER_MAX_HEALTH / 2) + 1];
+
+    memset(health_string_buf, ' ', sizeof(health_string_buf) - 1);
+    health_string_buf[sizeof(health_string_buf) - 1] = '\0';
 
 #ifdef DEBUG
-    uint16_t worst_raster_wait = 0xFFFF;
-    uint16_t raster_sum = 0;
+    bool draw_debug = false;
+    char frame_debug_buf[] = "    #####";
 #endif
 
     score = 0;
     score_updated = true;
 
     fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
-               HEALTH_X_TILE + PLAYER_MAX_HEALTH / 2, HEALTH_Y_TILE, COLOR_RED);
+               HEALTH_X_TILE + sizeof(health_string_buf) - 1, HEALTH_Y_TILE,
+               COLOR_RED);
+
+    fill_color(COIN_X_TILE, COIN_Y_TILE,
+               COIN_X_TILE + sizeof(coin_string_buf) - 1, COIN_Y_TILE,
+               COLOR_GREEN);
+
+    fill_color(SCORE_TEXT_X - sizeof(score_string_buf), SCORE_TEXT_Y,
+               SCORE_TEXT_X - 1, SCORE_TEXT_Y, COLOR_WHITE);
+
+#ifdef DEBUG
+    uint16_t worst_raster_wait = 0xFFFF;
+    uint16_t raster_sum = 0;
+
+    fill_color(SCORE_TEXT_X - sizeof(score_string_buf), SCORE_TEXT_Y + 1,
+               SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
+#endif
 
     while (true) {
         // Wait for next frame interrupt
@@ -384,55 +421,30 @@ void game_loop(void) {
 
         // Frame critical. These need to be done before the next frame
         // starts
-        DEBUG_COLOR(COLOR_RED);
+        DEBUG_COLOR(COLOR_BLUE);
 
-        draw_player();
-
-        for (uint8_t i = 0; i < PLAYER_MAX_HEALTH / 2; i++) {
-            if (player_health <= i * 2) {
-                put_char_xy(HEALTH_X_TILE + i, HEALTH_Y_TILE, BLANK_CHAR);
-            } else if (player_health == (i * 2) + 1) {
-                put_char_xy(HEALTH_X_TILE + i, HEALTH_Y_TILE, HALF_HEART_CHAR);
-            } else {
-                put_char_xy(HEALTH_X_TILE + i, HEALTH_Y_TILE, HEART_CHAR);
-            }
-        }
-
-        if (player_coins != last_coins_drawn) {
-            char buf[8];
-            buf[0] = '$';
-            int_to_string(player_coins, &buf[1]);
-            put_string_xy(COIN_X_TILE, COIN_Y_TILE, COLOR_GREEN, buf);
-            last_coins_drawn = player_coins;
-        }
-
-        if (score_updated) {
-            char buf[sizeof(score_text) + 7];
-            memcpy(buf, score_text, sizeof(score_text));
-            int_to_string(score, &buf[strlen(score_text)]);
-
-            put_string_xy(SCORE_TEXT_X - strlen(buf), SCORE_TEXT_Y, COLOR_WHITE,
-                          buf);
-
-            score_updated = false;
-        }
+        if (draw_coins) {
+            put_string_xy(COIN_X_TILE, COIN_Y_TILE, coin_string_buf);
+            draw_coins = false;
+        } else if (draw_score) {
+            put_string_xy(SCORE_TEXT_X - fast_strlen(score_string_buf),
+                          SCORE_TEXT_Y, score_string_buf);
+            draw_score = false;
+        } else
 #ifdef DEBUG
-        if ((frame_count & 0x3F) == 0) {
-            char buf[14];
-            fill_char(SCORE_TEXT_X - 14, SCORE_TEXT_Y + 1, SCORE_TEXT_X,
-                      SCORE_TEXT_Y + 1, ' ');
-            raster_sum = raster_sum >> 6;
-            int_to_string(raster_sum, buf);
-            strcat(buf, "/");
-            int_to_string(worst_raster_wait, &buf[strlen(buf)]);
-            put_string_xy(SCORE_TEXT_X - strlen(buf), SCORE_TEXT_Y + 1,
-                          COLOR_CYAN, buf);
+            if (draw_debug) {
+            put_string_xy(SCORE_TEXT_X - (sizeof(frame_debug_buf) - 1),
+                          SCORE_TEXT_Y + 1, frame_debug_buf);
+            draw_debug = false;
+        } else
+#endif
+            if (draw_health) {
+            put_string_xy(HEALTH_X_TILE, HEALTH_Y_TILE, health_string_buf);
+            draw_health = false;
         }
 
-        if (frame_count == 0) {
-            worst_raster_wait = 0xFFFF;
-        }
-#endif
+        DEBUG_COLOR(COLOR_RED);
+        draw_player();
 
         DEBUG_COLOR(COLOR_YELLOW);
         DISABLE_INTERRUPTS() {
@@ -446,10 +458,50 @@ void game_loop(void) {
         // Frame non critical. These can be done during the frame since they
         // don't affect graphics
         DEBUG_COLOR(COLOR_GREEN);
-
         update_player();
+
         DEBUG_COLOR(COLOR_PURPLE);
         update_mobs();
+
+        DEBUG_COLOR(COLOR_ORANGE);
+
+#ifdef DEBUG
+        if ((frame_count & 0x3F) == 0) {
+            raster_sum = raster_sum >> 6;
+        } else
+#endif
+            if (player_health_changed) {
+
+            for (uint8_t i = 0; i < PLAYER_MAX_HEALTH; i += 2) {
+                if (player_health <= i) {
+                    health_string_buf[i / 2] = ' ';
+                } else if (player_health == i + 1) {
+                    health_string_buf[i / 2] = HALF_HEART_CHAR;
+                } else {
+                    health_string_buf[i / 2] = HEART_CHAR;
+                }
+            }
+            player_health_changed = false;
+            draw_health = true;
+        } else if (score_updated) {
+            bcd_u16_to_string(score, &score_string_buf[10]);
+            score_updated = false;
+            draw_score = true;
+
+        } else if (player_coins_changed) {
+            pad_string(
+                &coin_string_buf[1], sizeof(coin_string_buf) - 1,
+                bcd_u16_to_string(player_get_coins(), &coin_string_buf[1]));
+
+            player_coins_changed = false;
+            draw_coins = true;
+        }
+
+#ifdef DEBUG
+        if (frame_count == 0) {
+            worst_raster_wait = 0xFFFF;
+        }
+#endif
 
         if (player_health <= 0 && !player_temp_invulnerable) {
             break;
@@ -544,7 +596,7 @@ int main() {
         player_sword_damage = 1;
         player_health = 6;
         player_full_health = 6;
-        player_coins = 0;
+        player_set_coins(0);
 
         init_player();
 
@@ -552,7 +604,10 @@ int main() {
 
         while (new_skeleton());
 
-        put_string_xy(START_TEXT_X, START_TEXT_Y, COLOR_WHITE, start_text);
+        fill_color(START_TEXT_X, START_TEXT_Y,
+                   START_TEXT_X + sizeof(start_text), START_TEXT_Y,
+                   COLOR_WHITE);
+        put_string_xy(START_TEXT_X, START_TEXT_Y, start_text);
 
         wait_frames(30);
 
@@ -561,17 +616,19 @@ int main() {
             frame_wait();
         }
 
-        fill_char(START_TEXT_X, START_TEXT_Y, START_TEXT_X + strlen(start_text),
-                  START_TEXT_Y, ' ');
+        fill_char(START_TEXT_X, START_TEXT_Y,
+                  START_TEXT_X + sizeof(start_text) - 1, START_TEXT_Y, ' ');
 
         fill_char(GAME_OVER_TEXT_X, GAME_OVER_TEXT_Y,
-                  GAME_OVER_TEXT_X + strlen(game_over_text), GAME_OVER_TEXT_Y,
-                  ' ');
+                  GAME_OVER_TEXT_X + sizeof(game_over_text) - 1,
+                  GAME_OVER_TEXT_Y, ' ');
 
         game_loop();
 
-        put_string_xy(GAME_OVER_TEXT_X + 1, GAME_OVER_TEXT_Y, COLOR_RED,
-                      game_over_text);
+        fill_color(GAME_OVER_TEXT_X + 1, GAME_OVER_TEXT_Y,
+                   GAME_OVER_TEXT_X + sizeof(game_over_text) - 1,
+                   GAME_OVER_TEXT_Y, COLOR_RED);
+        put_string_xy(GAME_OVER_TEXT_X + 1, GAME_OVER_TEXT_Y, game_over_text);
         wait_frames(4 * 60);
     }
 }
