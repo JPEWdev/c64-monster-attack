@@ -1,20 +1,8 @@
+#include "coin.spm.h"
 #include "mobs.h"
 #include "player.h"
 
-extern const struct sprite_frame coin_0;
-extern const struct sprite_frame coin_1;
-extern const struct sprite_frame coin_2;
-extern const struct sprite_frame coin_3;
-
-static const struct sprite_frame* const coin_frames[] = {
-    &coin_0,
-    &coin_1,
-    &coin_2,
-    &coin_3,
-};
-
-static const struct sprite coin = {FRAMES(coin_frames)};
-extern const struct bb coin_bb;
+static const struct sprite coin = COIN_SPRITE;
 
 static struct {
     uint8_t value[MAX_MOBS];

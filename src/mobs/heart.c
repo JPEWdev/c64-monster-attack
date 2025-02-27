@@ -1,16 +1,8 @@
+#include "heart.spm.h"
 #include "mobs.h"
 #include "player.h"
 
-extern const struct sprite_frame heart_0;
-extern const struct sprite_frame heart_1;
-
-static const struct sprite_frame* const heart_frames[] = {
-    &heart_0,
-    &heart_1,
-};
-
-static const struct sprite heart = {FRAMES(heart_frames)};
-extern const struct bb heart_bb;
+static const struct sprite heart = HEART_SPRITE;
 
 static struct {
     int16_t ttl[MAX_MOBS];

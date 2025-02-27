@@ -1,14 +1,9 @@
 #include "mobs.h"
 #include "player.h"
 
-extern const struct sprite_frame skeleton_0;
-extern const struct sprite_frame skeleton_1;
-static const struct sprite_frame* const skeleton_frames[] = {
-    &skeleton_0,
-    &skeleton_1,
-};
-const struct sprite skeleton = {FRAMES(skeleton_frames)};
-extern const struct bb skeleton_bb;
+#include "skeleton.spm.h"
+
+static const struct sprite skeleton = SKELETON_SPRITE;
 
 uint8_t create_skeleton(uint16_t map_x, uint8_t map_y) {
     uint8_t idx = alloc_mob();

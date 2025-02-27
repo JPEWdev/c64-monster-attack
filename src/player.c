@@ -14,6 +14,9 @@
 
 #define PLAYER_SPEED (2)
 
+#define PLAYER_ANIMATION_RATE (10)
+#define SWORD_ANIMATION_RATE (10)
+
 uint16_t player_map_x;
 uint8_t player_map_y;
 enum direction player_dir = SOUTH;
@@ -25,17 +28,17 @@ uint8_t player_temp_invulnerable;
 static int8_t player_push_x;
 static int8_t player_push_y;
 static uint8_t player_push_timer;
+static uint8_t player_frame;
+static uint8_t player_animation_counter;
+static uint8_t sword_frame;
+static uint8_t sword_animation_counter;
 
 uint8_t sword_state;
 uint16_t sword_x = 0;
 uint16_t sword_y = 0;
 
-static struct animation player_animation = {0};
-static struct animation sword_animation = {0};
-
-static enum direction player_sprite_dir = SOUTH;
+// static enum direction player_sprite_dir = SOUTH;
 static bool player_moving = false;
-static struct direction_sprite const* current_player_sprite = &player_sprite;
 
 static const struct {
     int8_t x;
@@ -48,17 +51,13 @@ static const struct {
 };
 
 void init_player(void) {
-    draw_direction_sprite(PLAYER_SPRITE_IDX, current_player_sprite, COLOR_GREEN,
-                          player_dir);
-    move_sprite(PLAYER_SPRITE_IDX, player_get_x(), player_get_y());
-
-    player_animation.rate = 10;
-    sword_animation.rate = 10;
     player_push_x = 0;
     player_push_y = 0;
     player_push_timer = 0;
     sword_state = SWORD_AWAY;
     player_temp_invulnerable = 0;
+    player_frame = 0;
+    sword_frame = 0;
 }
 
 bool damage_player(uint8_t damage) {
@@ -112,56 +111,129 @@ uint8_t player_get_quad_x(void) { return player_map_x / QUAD_WIDTH_PX; }
 uint8_t player_get_quad_y(void) { return player_map_y / QUAD_HEIGHT_PX; }
 
 void draw_player(void) {
-    move_sprite(PLAYER_SPRITE_IDX, player_get_x(), player_get_y());
-    move_sprite(SWORD_SPRITE_IDX, sword_x, sword_y);
-    if (sword_state == SWORD_VISIBLE && !sprite_is_visible(SWORD_SPRITE_IDX)) {
-        draw_direction_sprite(SWORD_SPRITE_IDX, &sword_sprite, COLOR_WHITE,
-                              player_dir);
-        draw_direction_sprite(PLAYER_SPRITE_IDX, &player_attack_sprite,
-                              COLOR_GREEN, player_dir);
-        current_player_sprite = &player_attack_sprite;
-    } else if (sword_state != SWORD_VISIBLE &&
-               sprite_is_visible(SWORD_SPRITE_IDX)) {
-        hide_sprite(SWORD_SPRITE_IDX);
-        draw_direction_sprite(PLAYER_SPRITE_IDX, &player_sprite, COLOR_GREEN,
-                              player_dir);
-        current_player_sprite = &player_sprite;
-    } else {
-        if (player_sprite_dir == player_dir) {
-            if (player_moving) {
-                animate_step(PLAYER_SPRITE_IDX, &player_animation,
-                             current_player_sprite->sprites[player_dir]);
-                animate_step(SWORD_SPRITE_IDX, &sword_animation,
-                             sword_sprite.sprites[player_dir]);
-            }
+    uint8_t sprite_enable = VICII_SPRITE_ENABLE & 0xFC;
+    uint8_t sprite_msb = VICII_SPRITE_MSB & 0xFC;
+    uint8_t sprite_y_expand = VICII_SPRITE_Y_EXPAND & 0xFC;
+    uint8_t sprite_x_expand = VICII_SPRITE_X_EXPAND & 0xFC;
+    uint8_t sprite_multicolor = VICII_SPRITE_MULTICOLOR & 0xFC;
+
+    if (sword_state == SWORD_VISIBLE) {
+        sprite_enable |= _BV(SWORD_SPRITE_IDX);
+
+        // In debug mode, always setup the sword registers for a better idea of
+        // the worst case frame time
+#ifdef DEBUG
+    }
+    {
+#endif
+        if (sword_animation_counter == 0) {
+            sword_frame++;
+            sword_animation_counter = SWORD_ANIMATION_RATE;
         } else {
-            if (sword_state == SWORD_VISIBLE) {
-                draw_direction_sprite(SWORD_SPRITE_IDX, &sword_sprite,
-                                      COLOR_WHITE, player_dir);
+            sword_animation_counter = 0;
+        }
+
+        if (sword_frame && sword_frame >= sword_sprite.num_frames[player_dir]) {
+            sword_frame = 0;
+        }
+
+        uint8_t flags = sword_sprite.flags[player_dir][sword_frame];
+
+        if (flags & SPRITE_IMAGE_EXPAND_X) {
+            sprite_x_expand |= _BV(SWORD_SPRITE_IDX);
+        }
+
+        if (flags & SPRITE_IMAGE_EXPAND_Y) {
+            sprite_y_expand |= _BV(SWORD_SPRITE_IDX);
+        }
+
+        if (flags & SPRITE_IMAGE_MULTICOLOR) {
+            sprite_multicolor |= _BV(SWORD_SPRITE_IDX);
+        }
+
+        VICII_SPRITE_POSITION[SWORD_SPRITE_IDX].x = sword_x & 0xFF;
+        VICII_SPRITE_POSITION[SWORD_SPRITE_IDX].y = sword_y;
+        if (sword_x & 0x100) {
+            sprite_msb |= _BV(SWORD_SPRITE_IDX);
+        }
+
+        VICII_SPRITE_COLOR[SWORD_SPRITE_IDX] = COLOR_WHITE;
+    }
+
+    struct direction_sprite const* sprite =
+        (sword_state == SWORD_VISIBLE) ? &player_attack_sprite : &player_sprite;
+    {
+        if (player_moving) {
+            if (player_animation_counter == 0) {
+                player_frame++;
+                player_animation_counter = PLAYER_ANIMATION_RATE;
+            } else {
+                player_animation_counter--;
             }
-            draw_direction_sprite(PLAYER_SPRITE_IDX, current_player_sprite,
-                                  COLOR_GREEN, player_dir);
+        }
+
+        if (player_frame && player_frame >= sprite->num_frames[player_dir]) {
+            player_frame = 0;
+        }
+
+        sprite_enable |= _BV(PLAYER_SPRITE_IDX);
+        uint8_t flags = sprite->flags[player_dir][player_frame];
+
+        if (flags & SPRITE_IMAGE_EXPAND_X) {
+            sprite_x_expand |= _BV(PLAYER_SPRITE_IDX);
+        }
+
+        if (flags & SPRITE_IMAGE_EXPAND_Y) {
+            sprite_y_expand |= _BV(PLAYER_SPRITE_IDX);
+        }
+
+        if (flags & SPRITE_IMAGE_MULTICOLOR) {
+            sprite_multicolor |= _BV(PLAYER_SPRITE_IDX);
+        }
+
+        uint16_t x = player_get_x();
+
+        VICII_SPRITE_POSITION[PLAYER_SPRITE_IDX].x = x & 0xFF;
+        VICII_SPRITE_POSITION[PLAYER_SPRITE_IDX].y = player_get_y();
+        if (x & 0x100) {
+            sprite_msb |= _BV(PLAYER_SPRITE_IDX);
+        }
+
+        switch (player_temp_invulnerable & 0x3) {
+            case 0:
+                VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_COLOR;
+                break;
+
+            case 1:
+                VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_1;
+                break;
+
+            case 2:
+                VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_2;
+                break;
+
+            case 3:
+                VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_3;
+                break;
         }
     }
 
-    switch (player_temp_invulnerable & 0x3) {
-        case 0:
-            VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_COLOR;
-            break;
-
-        case 1:
-            VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_1;
-            break;
-
-        case 2:
-            VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_2;
-            break;
-
-        case 3:
-            VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_3;
-            break;
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() {
+            sprite_pointers[PLAYER_SPRITE_IDX] =
+                sprite->pointers[player_dir][player_frame];
+            if (sword_state == SWORD_VISIBLE) {
+                sprite_pointers[SWORD_SPRITE_IDX] =
+                    sword_sprite.pointers[player_dir][sword_frame];
+            }
+        }
     }
-    player_sprite_dir = player_dir;
+    VICII_SPRITE_ENABLE = sprite_enable;
+    VICII_SPRITE_MSB = sprite_msb;
+    VICII_SPRITE_Y_EXPAND = sprite_y_expand;
+    VICII_SPRITE_X_EXPAND = sprite_x_expand;
+    VICII_SPRITE_MULTICOLOR = sprite_multicolor;
+
     player_moving = false;
 }
 

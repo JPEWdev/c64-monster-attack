@@ -220,7 +220,6 @@ uint8_t alloc_mob(void) {
 
 void destroy_mob(uint8_t idx) {
     mobs_in_use &= clrbit(idx);
-    hide_sprite(MOB_SPRITE_OFFSET + idx);
     // Set the Y position to max value so this sprite sorts to the end of the
     // list
     mobs_bot_y[idx] = 0xFF;
@@ -247,12 +246,6 @@ static uint8_t animate_mob(uint8_t idx) {
     }
 
     return mobs_sprite_frame[idx];
-}
-
-static uint8_t get_sprite_pointer(uint8_t idx, uint8_t frame) {
-    return ((uint16_t)(mobs_sprite[idx]->frames[frame]) -
-            (uint16_t)&video_base) /
-           64;
 }
 
 void draw_mobs(void) {
@@ -290,13 +283,11 @@ void draw_mobs(void) {
 
         uint8_t frame = animate_mob(mob_idx);
 
-        uint8_t s = get_sprite_pointer(mob_idx, frame);
-
-        uint8_t flags;
         ALL_RAM() {
-            sprite_pointers[sprite_idx] = s;
-            flags = mobs_sprite[mob_idx]->frames[frame]->flags;
+            sprite_pointers[sprite_idx] = mobs_sprite[mob_idx]->pointers[frame];
         };
+
+        uint8_t flags = mobs_sprite[mob_idx]->flags[frame];
 
         if (flags & SPRITE_IMAGE_EXPAND_Y) {
             sprite_y_expand |= setbit(sprite_idx);
@@ -342,8 +333,7 @@ void draw_mobs(void) {
             sprite_msb &= ~mask;
         }
 
-        uint8_t flags;
-        ALL_RAM() { flags = mobs_sprite[mob_idx]->frames[frame]->flags; };
+        uint8_t flags = mobs_sprite[mob_idx]->flags[frame];
 
         if (flags & SPRITE_IMAGE_EXPAND_Y) {
             sprite_y_expand |= mask;
@@ -367,7 +357,7 @@ void draw_mobs(void) {
             mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
 
         raster_set_sprite(
-            raster, sprite_idx, get_sprite_pointer(mob_idx, frame),
+            raster, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],
             mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color, sprite_msb,
             sprite_x_expand, sprite_y_expand, sprite_multicolor);
     }

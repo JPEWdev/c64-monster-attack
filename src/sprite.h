@@ -26,11 +26,17 @@ struct sprite_frame {
 
 struct sprite {
     uint8_t num_frames;
-    struct sprite_frame const* const* frames;
+    uint8_t const* pointers;
+    uint8_t const* flags;
+    uint8_t unused[3];
 };
+_Static_assert(sizeof(struct sprite) == 8,
+               "Sprite struct size must be power of 2");
 
 struct direction_sprite {
-    struct sprite const* sprites[DIRECTION_COUNT];
+    uint8_t num_frames[DIRECTION_COUNT];
+    uint8_t const* pointers[DIRECTION_COUNT];
+    uint8_t const* flags[DIRECTION_COUNT];
 };
 
 struct animation {
@@ -42,18 +48,5 @@ struct animation {
 
 _Static_assert(sizeof(struct animation) == 4,
                "Animation struct size must be power of 2");
-
-void animate_step(uint8_t idx, struct animation* a, struct sprite const* s);
-void animate_pause(uint8_t idx, struct animation* a, struct sprite const* s);
-uint8_t animate_sprite(uint8_t idx, struct sprite const* sprite, uint8_t frame);
-void draw_sprite(uint8_t idx, struct sprite const* sprite, uint8_t color);
-void draw_direction_sprite(uint8_t idx, struct direction_sprite const* sprite,
-                           uint8_t color, enum direction direction);
-uint8_t animate_direction_sprite(uint8_t idx,
-                                 struct direction_sprite const* sprite,
-                                 enum direction direction, uint8_t frame);
-void move_sprite(uint8_t idx, uint16_t x, uint16_t y);
-void hide_sprite(uint8_t idx);
-bool sprite_is_visible(uint8_t idx);
 
 #endif  // SPRITE_H

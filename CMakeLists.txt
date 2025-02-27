@@ -30,13 +30,13 @@ function(generate_sprite FN SOURCE_LIST)
     get_filename_component(D ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S DIRECTORY)
     file(MAKE_DIRECTORY ${D})
     add_custom_command(
-        COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${CMAKE_CURRENT_SOURCE_DIR}/${FN} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S
+        COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${CMAKE_CURRENT_SOURCE_DIR}/${FN} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.c ${CMAKE_CURRENT_BINARY_DIR}/${FN}.h
         DEPENDS ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${FN}
-        OUTPUT ${FN}.S
+        OUTPUT ${FN}.c ${FN}.h
         COMMENT "Generating code for sprite ${FN}"
         VERBATIM
     )
-    list(APPEND ${SOURCE_LIST} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S)
+    list(APPEND ${SOURCE_LIST} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.c)
     set(${SOURCE_LIST} "${${SOURCE_LIST}}" PARENT_SCOPE)
 endfunction()
 
@@ -123,7 +123,7 @@ if (DEBUG_MODE)
 endif()
 target_compile_definitions(${PROG_OUTPUT} PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 target_compile_options(${PROG_OUTPUT} PRIVATE -Wall -Werror -fnonreentrant)
-target_include_directories(${PROG_OUTPUT} PRIVATE src)
+target_include_directories(${PROG_OUTPUT} PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/sprites)
 
 set_target_properties(${PROG_OUTPUT} PROPERTIES
     LINK_FLAGS "-T ${LINKER_SCRIPT} -Wl,-Map,${CMAKE_PROJECT_NAME}.map"

@@ -26,7 +26,16 @@ SPRITE_IMAGE_MULTICOLOR = 1 << 2
 def main():
     parser = argparse.ArgumentParser(description="Convert SPM file to code")
     parser.add_argument("input", type=Path, help="Input SPM file")
-    parser.add_argument("output", type=Path, help="Output C file")
+    parser.add_argument(
+        "code",
+        type=Path,
+        help="Output C file",
+    )
+    parser.add_argument(
+        "header",
+        type=Path,
+        help="Output Header file",
+    )
 
     args = parser.parse_args()
 
@@ -35,9 +44,7 @@ def main():
 
     name = args.input.stem
 
-    with args.output.open("w") as f:
-        frame_names = []
-
+    with args.code.open("w") as code_f, args.header.open("w") as header_f:
         north = None
         south = None
         east = None
@@ -63,6 +70,27 @@ def main():
 
             if west is None or col < west:
                 west = col
+
+        header_f.write(f"#ifndef _{name.upper()}\n")
+        header_f.write(f"#define _{name.upper()}\n\n")
+        header_f.write('#include "sprite.h"\n')
+        header_f.write("#include <stdint.h>\n\n")
+
+        all_flags = []
+
+        num_frames = len(data["sprites"])
+        header_f.write(f"#define {name.upper()}_NUM_FRAMES ({num_frames})\n\n")
+
+        code_f.write(f'#include "{args.header.name}"\n')
+        code_f.write('#include "sprite.h"\n\n')
+        code_f.write("extern uint8_t video_base;\n")
+        code_f.write(f'__attribute__((section("video_{name}")))\n')
+        code_f.write("__attribute__((aligned(64)))\n")
+
+        header_f.write(
+            f"extern const struct sprite_frame {name}_frames[{num_frames}];\n"
+        )
+        code_f.write(f"const struct sprite_frame {name}_frames[{num_frames}] = {{\n")
 
         for sprite_idx, sprite in enumerate(data["sprites"]):
             pixel_data = []
@@ -108,20 +136,51 @@ def main():
             if sprite["multicolor"]:
                 flags |= SPRITE_IMAGE_MULTICOLOR
 
-            f.write(f"    .section video_{frame_name}\n")
-            f.write("    .align 1<<6\n")
-            f.write(f"    .global {frame_name}\n")
-            f.write(f"{frame_name}:\n")
-            f.write("    .byte " + ", ".join("0x%02X" % b for b in pixel_data) + "\n")
-            f.write(f"    .byte 0x{flags:02X}\n\n")
-        f.write("    .section .rodata\n")
-        f.write(f"    .global {name}_bb\n")
-        f.write(f"{name}_bb:\n")
-        f.write(f"    .byte {north}, {south}, {east}, {west}\n")
-        f.write(f"{name}_width:\n")
-        f.write(f"    .byte {(east - west) + 1}\n")
-        f.write(f"{name}_height:\n")
-        f.write(f"    .byte {(south - north) + 1}\n")
+            # code_f.write("    .align 1<<6\n")
+            # code_f.write(f"    .global {frame_name}\n")
+            # code_f.write(f"{frame_name}:\n")
+            code_f.write(
+                "    {{" + ", ".join("0x%02X" % b for b in pixel_data) + "}},\n"
+            )
+            # code_f.write(f"    .byte 0x{flags:02X}\n\n")
+            all_flags.append(flags)
+
+        code_f.write("};\n\n")
+
+        header_f.write(f"extern const struct bb {name}_bb;\n\n")
+        code_f.write(
+            f"const struct bb {name}_bb = {{{north}, {south}, {east}, {west}}};\n\n"
+        )
+
+        header_f.write(f"#define {name.upper()}_WIDTH ({east - west})\n")
+        header_f.write(f"extern const uint8_t {name}_width;\n\n")
+        code_f.write(f"const uint8_t {name}_width = {name.upper()}_WIDTH;\n")
+
+        header_f.write(f"#define {name.upper()}_HEIGHT ({south - north})\n")
+        header_f.write(f"extern const uint8_t {name}_height;\n\n")
+        code_f.write(f"const uint8_t {name}_height = {name.upper()}_HEIGHT;\n")
+
+        header_f.write(f"extern const uint8_t {name}_flags[{num_frames}];\n\n")
+        code_f.write(f"const uint8_t {name}_flags[{num_frames}] = {{")
+        code_f.write(", ".join("0x%02X" % f for f in all_flags))
+        code_f.write("};\n")
+
+        header_f.write(f"extern uint8_t {name}_pointers[{num_frames}];\n")
+        code_f.write(f"uint8_t {name}_pointers[{num_frames}];\n\n")
+        code_f.write("__attribute__((constructor)) static void init(void) {\n")
+        code_f.write(f"    for(uint8_t i = 0; i < {num_frames}; i++) {{\n")
+        code_f.write(f"        {name}_pointers[i] = ((uint16_t)&{name}_frames[i] - (uint16_t)&video_base) / 64;\n")
+        code_f.write("    }\n")
+        code_f.write("}\n")
+
+
+        header_f.write(f"#define {name.upper()}_SPRITE {{\\\n")
+        header_f.write(f"    {name.upper()}_NUM_FRAMES, \\\n")
+        header_f.write(f"    {name}_pointers, \\\n")
+        header_f.write(f"    {name}_flags, \\\n")
+        header_f.write("    }\n")
+
+        header_f.write("#endif\n")
 
     return 0
 
