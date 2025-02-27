@@ -30,7 +30,7 @@ function(generate_sprite FN SOURCE_LIST)
     get_filename_component(D ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S DIRECTORY)
     file(MAKE_DIRECTORY ${D})
     add_custom_command(
-        COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${CMAKE_CURRENT_SOURCE_DIR}/${FN} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S --format=gas
+        COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${CMAKE_CURRENT_SOURCE_DIR}/${FN} ${CMAKE_CURRENT_BINARY_DIR}/${FN}.S
         DEPENDS ${CMAKE_SOURCE_DIR}/scripts/spm2code.py ${FN}
         OUTPUT ${FN}.S
         COMMENT "Generating code for sprite ${FN}"

@@ -27,12 +27,6 @@ def main():
     parser = argparse.ArgumentParser(description="Convert SPM file to code")
     parser.add_argument("input", type=Path, help="Input SPM file")
     parser.add_argument("output", type=Path, help="Output C file")
-    parser.add_argument(
-        "--format",
-        help="Choose assembly output format",
-        choices=("vasm", "gas"),
-        default="vasm",
-    )
 
     args = parser.parse_args()
 
@@ -114,22 +108,12 @@ def main():
             if sprite["multicolor"]:
                 flags |= SPRITE_IMAGE_MULTICOLOR
 
-            if args.format == "vasm":
-                f.write(f'    section video_{frame_name}, "adr"\n')
-                f.write("    align 6\n")
-                f.write(f"    extern _{frame_name}\n")
-                f.write(f"_{frame_name}:\n")
-                f.write("    BYTE " + ", ".join("$%02X" % b for b in pixel_data) + "\n")
-                f.write(f"    BYTE ${flags:02X}\n\n")
-            else:
-                f.write(f"    .section video_{frame_name}\n")
-                f.write("    .align 1<<6\n")
-                f.write(f"    .global {frame_name}\n")
-                f.write(f"{frame_name}:\n")
-                f.write(
-                    "    .byte " + ", ".join("0x%02X" % b for b in pixel_data) + "\n"
-                )
-                f.write(f"    .byte 0x{flags:02X}\n\n")
+            f.write(f"    .section video_{frame_name}\n")
+            f.write("    .align 1<<6\n")
+            f.write(f"    .global {frame_name}\n")
+            f.write(f"{frame_name}:\n")
+            f.write("    .byte " + ", ".join("0x%02X" % b for b in pixel_data) + "\n")
+            f.write(f"    .byte 0x{flags:02X}\n\n")
         f.write("    .section .rodata\n")
         f.write(f"    .global {name}_bb\n")
         f.write(f"{name}_bb:\n")
