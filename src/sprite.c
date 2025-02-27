@@ -22,10 +22,12 @@ uint8_t animate_sprite(uint8_t idx, struct sprite const *sprite,
         ((uint16_t)(sprite->frames[frame]) - (uint16_t)&video_base) / 64;
 
     uint8_t flags;
-    ALL_RAM() {
-        sprite_pointers[idx] = s;
-        flags = sprite->frames[frame]->flags;
-    };
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() {
+            sprite_pointers[idx] = s;
+            flags = sprite->frames[frame]->flags;
+        }
+    }
 
     if (flags & SPRITE_IMAGE_EXPAND_Y) {
         VICII_SPRITE_Y_EXPAND |= setbit(idx);

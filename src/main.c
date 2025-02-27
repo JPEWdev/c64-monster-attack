@@ -328,6 +328,18 @@ static void on_skeleton_kill(uint8_t idx) {
     }
 }
 
+static void create_status_raster_cmd(void) {
+    uint8_t idx = alloc_raster_cmd(STATUS_INT_LINE);
+    raster_set_vicii_bg_color(idx, current_screen->bg_color_0);
+    raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2 | _BV(VICII_MCM_BIT));
+}
+
+static void create_done_raster_cmd(void) {
+    uint8_t idx = alloc_raster_cmd(DONE_INT_LINE);
+    raster_set_vicii_bg_color(idx, COLOR_BLACK);
+    raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2);
+}
+
 #ifdef DEBUG
 static uint16_t get_raster(void) {
     return (VICII_CTRL_1 & _BV(VICII_RST8_BIT)) << 1 | VICII_RASTER;
@@ -423,7 +435,13 @@ void game_loop(void) {
 #endif
 
         DEBUG_COLOR(COLOR_YELLOW);
-        draw_mobs();
+        DISABLE_INTERRUPTS() {
+            prepare_raster_cmds();
+            create_status_raster_cmd();
+            draw_mobs();
+            create_done_raster_cmd();
+            finish_raster_cmds();
+        }
 
         // Frame non critical. These can be done during the frame since they
         // don't affect graphics
@@ -452,11 +470,15 @@ void load_data(char const* fn, uint8_t* dest) {
         buffer[i] = cbm_k_chrin();
         i++;
         if (i == 0) {
-            ALL_RAM() { memcpy(dest, buffer, sizeof(buffer)); }
+            DISABLE_INTERRUPTS() {
+                ALL_RAM() { memcpy(dest, buffer, sizeof(buffer)); }
+            }
             dest += sizeof(buffer);
         }
     }
-    ALL_RAM() { memcpy(dest, buffer, i); }
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() { memcpy(dest, buffer, i); }
+    }
     cbm_k_close(15);
 }
 
@@ -495,23 +517,20 @@ int main() {
     VICII_INTERRUPT_ENABLE = _BV(VICII_RST_BIT);
 
     prepare_raster_cmds();
-    {
-        uint8_t idx = alloc_raster_cmd(STATUS_INT_LINE);
-        raster_set_vicii_bg_color(idx, current_screen->bg_color_0);
-        raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2 | _BV(VICII_MCM_BIT));
-    }
-
-    {
-        uint8_t idx = alloc_raster_cmd(DONE_INT_LINE);
-        raster_set_vicii_bg_color(idx, COLOR_BLACK);
-        raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2);
-    }
+    create_status_raster_cmd();
+    create_done_raster_cmd();
     finish_raster_cmds();
 
     enable_interrupts();
+
+    init_mobs();
+
     frame_wait();
 
     while (true) {
+        // Hide all sprites
+        VICII_SPRITE_ENABLE = 0;
+
         fill_char(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,
                   BLANK_CHAR);
         fill_color(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,

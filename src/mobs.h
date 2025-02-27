@@ -7,7 +7,7 @@
 #include "sprite.h"
 #include "util.h"
 
-#define MAX_MOBS (6)
+#define MAX_MOBS (8)
 
 #define FRAMES(f) ARRAY_SIZE(f), f
 
@@ -15,6 +15,7 @@ typedef void (*mob_sword_collision_handler)(uint8_t idx, uint8_t damage);
 typedef void (*mob_action_handler)(uint8_t idx);
 typedef void (*mob_update_handler)(uint8_t idx, uint8_t num_frames);
 
+void init_mobs(void);
 void mob_set_sprite(uint8_t idx, struct sprite const* sprite);
 struct sprite const* mob_get_sprite(uint8_t idx);
 void mob_set_bb(uint8_t idx, struct bb bb);

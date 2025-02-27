@@ -131,15 +131,18 @@ enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
     }
 }
 
-uint8_t set_all_ram(void) {
+uint8_t _disable_int(void) {
     disable_interrupts();
+    return 1;
+}
+
+void _restore_int(uint8_t* p) { enable_interrupts(); }
+
+uint8_t set_all_ram(void) {
     uint8_t p = PROCESSOR_PORT;
     PROCESSOR_PORT = (PROCESSOR_PORT & ~MEMORY_MASK) | MEMORY_RAM_ONLY;
     return p;
 }
 
-void restore_all_ram(uint8_t* port) {
-    PROCESSOR_PORT = *port;
-    enable_interrupts();
-}
+void restore_all_ram(uint8_t* port) { PROCESSOR_PORT = *port; }
 

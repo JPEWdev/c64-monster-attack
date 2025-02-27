@@ -13,6 +13,7 @@
 #define RASTER_VICII_BG _BV(0)
 #define RASTER_VICII_CTRL_2 _BV(1)
 #define RASTER_LAST _BV(2)
+#define RASTER_SPRITE _BV(3)
 
 uint8_t frame_count = 0;
 
@@ -22,6 +23,15 @@ uint8_t __zeropage vicii_bg_0_next[MAX_RASTER_CMDS];
 uint8_t __zeropage vicii_ctrl_2_next[MAX_RASTER_CMDS];
 uint8_t __zeropage vicii_raster_next[MAX_RASTER_CMDS];
 uint8_t __zeropage raster_flags[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_idx[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_pointer[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_color[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_x[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_y[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_msb[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_x_expand[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_y_expand[MAX_RASTER_CMDS];
+uint8_t __zeropage raster_sprite_multicolor[MAX_RASTER_CMDS];
 
 static uint8_t first_line;
 
@@ -53,4 +63,20 @@ void raster_set_vicii_bg_color(uint8_t idx, uint8_t bg_color) {
 void raster_set_vicii_ctrl_2(uint8_t idx, uint8_t ctrl_2) {
     raster_flags[idx] |= RASTER_VICII_CTRL_2;
     vicii_ctrl_2_next[idx] = ctrl_2;
+}
+
+void raster_set_sprite(uint8_t idx, uint8_t sprite_idx, uint8_t sprite_pointer,
+                       uint8_t sprite_x, uint8_t sprite_y, uint8_t color,
+                       uint8_t sprite_msb, uint8_t sprite_x_expand,
+                       uint8_t sprite_y_expand, uint8_t sprite_multicolor) {
+    raster_flags[idx] |= RASTER_SPRITE;
+    raster_sprite_idx[idx] = sprite_idx;
+    raster_sprite_pointer[idx] = sprite_pointer;
+    raster_sprite_x[idx] = sprite_x;
+    raster_sprite_y[idx] = sprite_y;
+    raster_sprite_color[idx] = color;
+    raster_sprite_msb[idx] = sprite_msb;
+    raster_sprite_x_expand[idx] = sprite_x_expand;
+    raster_sprite_y_expand[idx] = sprite_y_expand;
+    raster_sprite_multicolor[idx] = sprite_multicolor;
 }

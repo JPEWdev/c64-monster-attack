@@ -10,9 +10,17 @@
 #define ARRAY_SIZE(arr) ((sizeof(arr)) / (sizeof(arr[0])))
 
 #define _BV(bit) (1 << (bit))
+#define _BMASK(bits) ((1 << bits) - 1)
 
 #define disable_interrupts() asm volatile("sei")
 #define enable_interrupts() asm volatile("cli")
+
+#define swap(a, b)        \
+    do {                  \
+        uint8_t temp = a; \
+        (a) = (b);        \
+        (b) = temp;       \
+    } while (0)
 
 enum direction {
     NORTH,
@@ -48,13 +56,21 @@ void int_to_string(int16_t i, char str[7]);
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y);
 
-uint8_t set_all_ram(void);
+uint8_t set_all_ram();
 void restore_all_ram(uint8_t* port);
 
-#define ALL_RAM()                                                       \
-    for (uint8_t _todo = 1, _port_save                                  \
-                            __attribute__((cleanup(restore_all_ram))) = \
-                                set_all_ram();                          \
-         _todo; _todo = 0)
+uint8_t _disable_int(void);
+void _restore_int(uint8_t* p);
+
+#define DISABLE_INTERRUPTS()                                      \
+    for (uint8_t _di_todo                                         \
+         __attribute__((cleanup(_restore_int))) = _disable_int(); \
+         _di_todo; _di_todo = 0)
+
+#define ALL_RAM()                                                           \
+    for (uint8_t _ram_todo = 1, _port_save                                  \
+                                __attribute__((cleanup(restore_all_ram))) = \
+                                    set_all_ram();                          \
+         _ram_todo; _ram_todo = 0)
 
 #endif

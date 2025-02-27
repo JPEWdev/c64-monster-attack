@@ -8,6 +8,9 @@
 temp_collision:
     .byte 0
 
+skip_rst_trampoline:
+    jmp skip_rst
+
 isr_handler:
 #ifdef DEBUG
     lda VIC_BORDERCOLOR
@@ -19,10 +22,12 @@ isr_handler:
 
     lda #$01
     and VIC_IRR
-    beq skip_rst
+    beq skip_rst_trampoline
 
+repeat_raster:
     ldx raster_cmd_idx
 
+    ; Check VICII BG
     lda #$01
     and raster_flags,x
     beq skip_bg0
@@ -38,6 +43,7 @@ raster_loop:
     sty VIC_BG_COLOR0
 skip_bg0:
 
+    ; Check VICII CTRL 2
     lda #$02
     and raster_flags,x
     beq skip_ctrl_2
@@ -47,11 +53,58 @@ skip_bg0:
 
 skip_ctrl_2:
 
-    lda vicii_raster_next,x
-    sta VIC_HLINE
+    ; Check Sprite
+    lda #$08
+    and raster_flags,x
+    beq skip_sprite
 
+    lda raster_sprite_x_expand,x
+    sta VIC_SPR_EXP_X
+
+    lda raster_sprite_y_expand,x
+    sta VIC_SPR_EXP_Y
+
+    lda raster_sprite_multicolor,x
+    sta VIC_SPR_MCOLOR
+
+    ; y = sprite index
+    ldy raster_sprite_idx,x
+
+    lda LORAM
+    pha
+    and #$f8
+    sta LORAM
+
+    lda raster_sprite_pointer,x
+    sta sprite_pointers,y
+
+    pla
+    sta LORAM
+
+    lda raster_sprite_color,x
+    sta VIC_SPR0_COLOR,y
+
+    ; Multiply sprite index by 2
+    tya
+    asl
+    tay
+
+    lda raster_sprite_msb,x
+    sta VIC_SPR_HI_X
+
+    lda raster_sprite_x,x
+    sta VIC_SPR0_X,y
+
+    lda raster_sprite_y,x
+    sta VIC_SPR0_Y,y
+
+skip_sprite:
     inc raster_cmd_idx
 
+    ; Load next raster line to y
+    ldy vicii_raster_next,x
+
+    ; Check Last flag
     lda #$04
     and raster_flags,x
     beq skip_last
@@ -60,8 +113,18 @@ skip_ctrl_2:
     sta raster_cmd_idx
 
     inc frame_count
+    jmp set_next_raster
 
 skip_last:
+    tya
+    sec
+    sbc #$03
+    cmp VIC_HLINE
+    bcs set_next_raster
+    jmp repeat_raster
+
+set_next_raster:
+    sty VIC_HLINE
 
     lda #$01
     sta VIC_IRR

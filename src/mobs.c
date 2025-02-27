@@ -27,6 +27,7 @@ static struct sprite const* mobs_sprite[MAX_MOBS];
 static struct bb mobs_bb[MAX_MOBS];
 static uint16_t mobs_map_x[MAX_MOBS];
 static uint8_t mobs_map_y[MAX_MOBS];
+static uint8_t mobs_bot_y[MAX_MOBS];
 static int8_t mobs_hp[MAX_MOBS];
 static uint8_t mobs_color[MAX_MOBS];
 static uint8_t mobs_damage_color[MAX_MOBS];
@@ -37,7 +38,9 @@ static uint16_t mobs_target_map_x[MAX_MOBS];
 static uint8_t mobs_target_map_y[MAX_MOBS];
 static int8_t mobs_damage_push_x[MAX_MOBS];
 static int8_t mobs_damage_push_y[MAX_MOBS];
-static struct animation mobs_animation[MAX_MOBS];
+static uint8_t mobs_sprite_frame[MAX_MOBS];
+static uint8_t mobs_animation_rate[MAX_MOBS];
+static uint8_t mobs_animation_count[MAX_MOBS];
 static mob_sword_collision_handler mobs_on_sword_collision[MAX_MOBS];
 static mob_action_handler mobs_on_player_collision[MAX_MOBS];
 static mob_action_handler mobs_on_death[MAX_MOBS];
@@ -48,8 +51,48 @@ static bool mobs_needs_redraw[MAX_MOBS];
 static bool mobs_reached_target[MAX_MOBS];
 static uint8_t mobs_last_update_frame[MAX_MOBS];
 
+static uint8_t mob_idx_by_y[MAX_MOBS];
+
+void init_mobs(void) {
+    for (uint8_t i = 0; i < MAX_MOBS; i++) {
+        mobs_bot_y[i] = 0xFF;
+        mob_idx_by_y[i] = i;
+    }
+}
+
+static void set_bot_y(uint8_t idx) {
+    if (mobs_sprite[idx]) {
+        mobs_bot_y[idx] =
+            mobs_map_y[idx] + MAP_OFFSET_Y_PX + SPRITE_HEIGHT_PX / 2;
+    } else {
+        mobs_bot_y[idx] = 0xFF;
+    }
+}
+
+// Ocean sort method
+static void sort_mobs_y(void) {
+    for (uint8_t i = 0; i < MAX_MOBS - 1; i++) {
+        if (mobs_bot_y[mob_idx_by_y[i + 1]] < mobs_bot_y[mob_idx_by_y[i]]) {
+            uint8_t j = i;
+            while (true) {
+                swap(mob_idx_by_y[j], mob_idx_by_y[j + 1]);
+                if (j == 0) {
+                    break;
+                }
+                j--;
+                if (mobs_bot_y[mob_idx_by_y[j + 1]] >=
+                    mobs_bot_y[mob_idx_by_y[j]]) {
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void mob_set_sprite(uint8_t idx, struct sprite const* sprite) {
     mobs_sprite[idx] = sprite;
+    mobs_sprite_frame[idx] = 0;
+    set_bot_y(idx);
 }
 
 struct sprite const* mob_get_sprite(uint8_t idx) { return mobs_sprite[idx]; }
@@ -59,6 +102,7 @@ void mob_set_bb(uint8_t idx, struct bb bb) { mobs_bb[idx] = bb; }
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_map_x[idx] = map_x;
     mobs_map_y[idx] = map_y;
+    set_bot_y(idx);
 }
 
 uint16_t mob_get_x(uint8_t idx) {
@@ -129,7 +173,7 @@ void mob_set_update_handler(uint8_t idx, mob_update_handler handler) {
 }
 
 void mob_set_animation_rate(uint8_t idx, uint8_t frames) {
-    mobs_animation[idx].rate = frames;
+    mobs_animation_rate[idx] = frames;
 }
 
 uint8_t alloc_mob(void) {
@@ -141,6 +185,7 @@ uint8_t alloc_mob(void) {
             memset(&mobs_bb[i], 0, sizeof(mobs_bb[i]));
             mobs_map_x[i] = 0;
             mobs_map_y[i] = 0;
+            mobs_bot_y[i] = 0xFF;
             mobs_hp[i] = 0;
             mobs_color[i] = 0;
             mobs_damage_color[i] = 0;
@@ -155,7 +200,7 @@ uint8_t alloc_mob(void) {
             mobs_damage_push_x[i] = 0;
             mobs_damage_push_y[i] = 0;
 
-            memset(&mobs_animation[i], 0, sizeof(mobs_animation[i]));
+            mobs_sprite_frame[i] = 0;
 
             mobs_on_sword_collision[i] = NULL;
             mobs_on_player_collision[i] = NULL;
@@ -176,6 +221,9 @@ uint8_t alloc_mob(void) {
 void destroy_mob(uint8_t idx) {
     mobs_in_use &= clrbit(idx);
     hide_sprite(MOB_SPRITE_OFFSET + idx);
+    // Set the Y position to max value so this sprite sorts to the end of the
+    // list
+    mobs_bot_y[idx] = 0xFF;
 }
 
 void destroy_all_mobs(void) {
@@ -186,30 +234,142 @@ void destroy_all_mobs(void) {
     }
 }
 
+static uint8_t animate_mob(uint8_t idx) {
+    if (mobs_animation_count[idx] == 0) {
+        mobs_sprite_frame[idx]++;
+        mobs_animation_count[idx] = mobs_animation_rate[idx];
+    } else {
+        mobs_animation_count[idx]--;
+    }
+
+    if (mobs_sprite_frame[idx] >= mobs_sprite[idx]->num_frames) {
+        mobs_sprite_frame[idx] = 0;
+    }
+
+    return mobs_sprite_frame[idx];
+}
+
+static uint8_t get_sprite_pointer(uint8_t idx, uint8_t frame) {
+    return ((uint16_t)(mobs_sprite[idx]->frames[frame]) -
+            (uint16_t)&video_base) /
+           64;
+}
+
 void draw_mobs(void) {
-    for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        uint8_t sprite_idx = i + MOB_SPRITE_OFFSET;
+    uint8_t sprite_enable = VICII_SPRITE_ENABLE & _BMASK(MOB_SPRITE_OFFSET);
+    uint8_t sprite_msb = VICII_SPRITE_MSB & _BMASK(MOB_SPRITE_OFFSET);
+    uint8_t sprite_y_expand = VICII_SPRITE_Y_EXPAND & _BMASK(MOB_SPRITE_OFFSET);
+    uint8_t sprite_x_expand = VICII_SPRITE_X_EXPAND & _BMASK(MOB_SPRITE_OFFSET);
+    uint8_t sprite_multicolor =
+        VICII_SPRITE_MULTICOLOR & _BMASK(MOB_SPRITE_OFFSET);
 
-        if ((mobs_in_use & setbit(i)) == 0 || !mobs_sprite[i]) {
-            hide_sprite(sprite_idx);
-            mobs_needs_redraw[i] = true;
-            continue;
+    // Initial drawn sprites
+    uint8_t sprite_idx = MOB_SPRITE_OFFSET;
+    uint8_t y_idx = 0;
+    for (; y_idx < MAX_MOBS && sprite_idx < 8; y_idx++, sprite_idx++) {
+        uint8_t mob_idx = mob_idx_by_y[y_idx];
+        if (mobs_bot_y[mob_idx] == 0xFF) {
+            // As soon as we see an invalid Y coordinate, we are done.
+            break;
         }
 
-        move_sprite(sprite_idx, mob_get_x(i), mob_get_y(i));
+        sprite_enable |= setbit(sprite_idx);
 
-        if (sprite_is_visible(sprite_idx) && !mobs_needs_redraw[i]) {
-            animate_step(sprite_idx, &mobs_animation[i], mobs_sprite[i]);
+        if (mob_get_x(mob_idx) & 0x0100) {
+            sprite_msb |= setbit(sprite_idx);
+        }
+
+        VICII_SPRITE_POSITION[sprite_idx].x = mob_get_x(mob_idx) & 0xFF;
+        VICII_SPRITE_POSITION[sprite_idx].y = mob_get_y(mob_idx);
+
+        if (mobs_damage_counter[mob_idx] & 1) {
+            VICII_SPRITE_COLOR[sprite_idx] = mobs_damage_color[mob_idx];
         } else {
-            draw_sprite(sprite_idx, mobs_sprite[i], mobs_color[i]);
-            mobs_needs_redraw[i] = false;
+            VICII_SPRITE_COLOR[sprite_idx] = mobs_color[mob_idx];
         }
 
-        if (mobs_damage_counter[i] & 1) {
-            VICII_SPRITE_COLOR[sprite_idx] = mobs_damage_color[i];
-        } else {
-            VICII_SPRITE_COLOR[sprite_idx] = mobs_color[i];
+        uint8_t frame = animate_mob(mob_idx);
+
+        uint8_t s = get_sprite_pointer(mob_idx, frame);
+
+        uint8_t flags;
+        ALL_RAM() {
+            sprite_pointers[sprite_idx] = s;
+            flags = mobs_sprite[mob_idx]->frames[frame]->flags;
+        };
+
+        if (flags & SPRITE_IMAGE_EXPAND_Y) {
+            sprite_y_expand |= setbit(sprite_idx);
         }
+
+        if (flags & SPRITE_IMAGE_EXPAND_X) {
+            sprite_x_expand |= setbit(sprite_idx);
+        }
+
+        if (flags & SPRITE_IMAGE_MULTICOLOR) {
+            sprite_multicolor |= setbit(sprite_idx);
+        }
+    }
+
+    VICII_SPRITE_ENABLE = sprite_enable;
+    VICII_SPRITE_MSB = sprite_msb;
+    VICII_SPRITE_Y_EXPAND = sprite_y_expand;
+    VICII_SPRITE_X_EXPAND = sprite_x_expand;
+    VICII_SPRITE_MULTICOLOR = sprite_multicolor;
+
+    // Multiplexed sprites
+    for (; y_idx < MAX_MOBS; y_idx++, sprite_idx++) {
+        uint8_t mob_idx = mob_idx_by_y[y_idx];
+        if (mobs_bot_y[mob_idx] == 0xFF) {
+            // As soon as we see an invalid Y coordinate, we are done.
+            break;
+        }
+
+        if (sprite_idx >= 8) {
+            sprite_idx = MOB_SPRITE_OFFSET;
+        }
+
+        uint8_t const mask = setbit(sprite_idx);
+
+        uint8_t color = (mobs_damage_counter[mob_idx] & 1)
+                            ? mobs_damage_color[mob_idx]
+                            : mobs_color[mob_idx];
+        uint8_t frame = animate_mob(mob_idx);
+
+        if (mob_get_x(mob_idx) & 0x0100) {
+            sprite_msb |= mask;
+        } else {
+            sprite_msb &= ~mask;
+        }
+
+        uint8_t flags;
+        ALL_RAM() { flags = mobs_sprite[mob_idx]->frames[frame]->flags; };
+
+        if (flags & SPRITE_IMAGE_EXPAND_Y) {
+            sprite_y_expand |= mask;
+        } else {
+            sprite_y_expand &= ~mask;
+        }
+
+        if (flags & SPRITE_IMAGE_EXPAND_X) {
+            sprite_x_expand |= mask;
+        } else {
+            sprite_x_expand &= ~mask;
+        }
+
+        if (flags & SPRITE_IMAGE_MULTICOLOR) {
+            sprite_multicolor |= mask;
+        } else {
+            sprite_multicolor &= ~mask;
+        }
+
+        uint8_t raster = alloc_raster_cmd(
+            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
+
+        raster_set_sprite(
+            raster, sprite_idx, get_sprite_pointer(mob_idx, frame),
+            mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color, sprite_msb,
+            sprite_x_expand, sprite_y_expand, sprite_multicolor);
     }
 }
 
@@ -297,6 +457,8 @@ void update_mobs(void) {
             }
         }
 
+        set_bot_y(i);
+
         if (mobs_reached_target[i] && !called_reached_target) {
             mobs_on_reached_target[i](i);
             mobs_reached_target[i] = false;
@@ -318,6 +480,8 @@ void update_mobs(void) {
             mob_update_idx = 0;
         }
     }
+
+    sort_mobs_y();
 }
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb) {

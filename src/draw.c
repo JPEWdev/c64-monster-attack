@@ -12,7 +12,9 @@
 #include "util.h"
 
 void put_char_xy(uint8_t x, uint8_t y, uint8_t c) {
-    ALL_RAM() { screen_data[y][x] = c; }
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() { screen_data[y][x] = c; }
+    }
 }
 
 void put_string_xy(uint8_t x, uint8_t y, uint8_t color, char const *c) {
@@ -57,9 +59,11 @@ void set_color(uint8_t x, uint8_t y, uint8_t color) {
 }
 
 void fill_char(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t c) {
-    ALL_RAM() {
-        for (uint8_t y = y1; y <= y2; y++) {
-            memset(&screen_data[y][x1], c, (x2 - x1) + 1);
+    DISABLE_INTERRUPTS() {
+        ALL_RAM() {
+            for (uint8_t y = y1; y <= y2; y++) {
+                memset(&screen_data[y][x1], c, (x2 - x1) + 1);
+            }
         }
     }
 }
