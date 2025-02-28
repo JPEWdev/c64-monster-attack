@@ -55,14 +55,15 @@ function(generate_charset FN SOURCE_LIST SECTION)
 endfunction()
 
 list(APPEND SOURCES
-	src/draw.c
-	src/input.c
-	src/main.c
-	src/map.c
-	src/mobs.c
-	src/player-sprite.c
-	src/screen.S
-	src/sprite.c
+    src/bcd.c
+    src/draw.c
+    src/input.c
+    src/main.c
+    src/map.c
+    src/mobs.c
+    src/player-sprite.c
+    src/screen.S
+    src/sprite.c
     src/isr-handler.S
     src/isr.c
     src/main.c
