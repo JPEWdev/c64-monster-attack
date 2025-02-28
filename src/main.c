@@ -377,6 +377,8 @@ void game_loop(void) {
 
     score = 0;
     score_updated = true;
+    player_health_changed = true;
+    player_coins_changed = true;
 
     fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
                HEALTH_X_TILE + sizeof(health_string_buf) - 1, HEALTH_Y_TILE,
