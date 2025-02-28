@@ -382,6 +382,13 @@ static bool check_mob_move(uint8_t idx, int8_t move_x, int8_t move_y) {
         if (mobs_map_y[idx] > MAP_HEIGHT_PX - move_y) {
             return false;
         }
+
+        // Prevent mob from going off the bottom raster line as this messes up
+        // the sprite multiplexing logic
+        if (mob_get_y(idx) + SPRITE_HEIGHT_PX >=
+            SCREEN_HEIGHT_PX + BORDER_HEIGHT_PX - move_y) {
+            return false;
+        }
     } else if (move_y < 0) {
         if (-move_y > mobs_map_y[idx]) {
             return false;

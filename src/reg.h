@@ -158,6 +158,8 @@ extern uint8_t video_base;
 
 #define SCREEN_WIDTH_TILE (40)
 #define SCREEN_HEIGHT_TILE (25)
+#define SCREEN_WIDTH_PX (SCREEN_WIDTH_TILE * 8)
+#define SCREEN_HEIGHT_PX (SCREEN_HEIGHT_TILE * 8)
 #define BORDER_WIDTH_PX (24)
 #define BORDER_HEIGHT_PX (50)
 
