@@ -5,6 +5,11 @@ Commodore 64 game where you fight an endless wave of monsters
 This game is basically a tech demo for an adventure game engine. I would like
 to use it to write a full adventure game someday.
 
+## Download
+
+The D64 disk image for the latest release can be downloaded from the
+[GitHub Releases](https://github.com/JPEWdev/c64-monster-attack/releases) page.
+
 ## Game play
 
 Move around with Joysick 2, use the fire button to extend your sword. Destroy
@@ -84,4 +89,3 @@ still like to add:
  3. A store where coins can be spent for power ups (better weapons, more
     health, etc.)
  4. Other enemies
- 5. Skeleton AI should respect impassable terrain
