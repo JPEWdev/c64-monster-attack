@@ -11,6 +11,12 @@ temp_collision:
 skip_rst_trampoline:
     jmp skip_rst
 
+handle_missed_sprite:
+    pla
+    lda #$01
+    sta missed_sprite,x
+    jmp skip_sprite
+
 isr_handler:
 #ifdef DEBUG
     lda VIC_BORDERCOLOR
@@ -58,6 +64,29 @@ skip_ctrl_2:
     and raster_flags,x
     beq skip_sprite
 
+    lda raster_sprite_idx,x
+    pha
+
+    ; Multiply sprite index by 2
+    asl
+    tay
+
+    lda raster_sprite_y,x
+    sta VIC_SPR0_Y,y
+    cmp VIC_HLINE
+    bcc handle_missed_sprite
+    beq handle_missed_sprite
+
+    lda raster_sprite_msb,x
+    sta VIC_SPR_HI_X
+
+    lda raster_sprite_x,x
+    sta VIC_SPR0_X,y
+
+    ; y = sprite index
+    pla
+    tay
+
     lda raster_sprite_x_expand,x
     sta VIC_SPR_EXP_X
 
@@ -66,9 +95,6 @@ skip_ctrl_2:
 
     lda raster_sprite_multicolor,x
     sta VIC_SPR_MCOLOR
-
-    ; y = sprite index
-    ldy raster_sprite_idx,x
 
     lda LORAM
     pha
@@ -83,20 +109,6 @@ skip_ctrl_2:
 
     lda raster_sprite_color,x
     sta VIC_SPR0_COLOR,y
-
-    ; Multiply sprite index by 2
-    tya
-    asl
-    tay
-
-    lda raster_sprite_msb,x
-    sta VIC_SPR_HI_X
-
-    lda raster_sprite_x,x
-    sta VIC_SPR0_X,y
-
-    lda raster_sprite_y,x
-    sta VIC_SPR0_Y,y
 
 skip_sprite:
     inc raster_cmd_idx

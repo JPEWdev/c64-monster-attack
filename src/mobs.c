@@ -50,6 +50,7 @@ static uint8_t mobs_speed_counter[MAX_MOBS];
 static bool mobs_needs_redraw[MAX_MOBS];
 static bool mobs_reached_target[MAX_MOBS];
 static uint8_t mobs_last_update_frame[MAX_MOBS];
+static uint8_t mobs_raster_idx[MAX_MOBS];
 
 static uint8_t mob_idx_by_y[MAX_MOBS];
 
@@ -300,6 +301,7 @@ void draw_mobs(void) {
         if (flags & SPRITE_IMAGE_MULTICOLOR) {
             sprite_multicolor |= setbit(sprite_idx);
         }
+        mobs_raster_idx[mob_idx] = 0xFF;
     }
 
     VICII_SPRITE_ENABLE = sprite_enable;
@@ -353,13 +355,14 @@ void draw_mobs(void) {
             sprite_multicolor &= ~mask;
         }
 
-        uint8_t raster = alloc_raster_cmd(
+        mobs_raster_idx[mob_idx] = alloc_raster_cmd(
             mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
 
-        raster_set_sprite(
-            raster, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],
-            mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color, sprite_msb,
-            sprite_x_expand, sprite_y_expand, sprite_multicolor);
+        raster_set_sprite(mobs_raster_idx[mob_idx], sprite_idx,
+                          mobs_sprite[mob_idx]->pointers[frame],
+                          mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color,
+                          sprite_msb, sprite_x_expand, sprite_y_expand,
+                          sprite_multicolor);
     }
 }
 
@@ -481,6 +484,10 @@ void update_mobs(void) {
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
     if (mobs_in_use & setbit(idx)) {
+        if (mobs_raster_idx[idx] != 0xFF &&
+            last_missed_sprite[mobs_raster_idx[idx]]) {
+            return false;
+        }
         const struct bb16 mob_bb =
             bb_add_offset(&mobs_bb[idx], mob_get_x(idx), mob_get_y(idx));
 

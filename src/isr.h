@@ -5,10 +5,12 @@
 #define _ISR_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define MAX_RASTER_CMDS (4)
 
 extern uint8_t frame_count;
+extern bool last_missed_sprite[MAX_RASTER_CMDS];
 
 void isr_handler(void);
 
