@@ -356,7 +356,7 @@ void draw_mobs(void) {
         }
 
         mobs_raster_idx[mob_idx] = alloc_raster_cmd(
-            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
+            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]] + 1);
 
         raster_set_sprite(mobs_raster_idx[mob_idx], sprite_idx,
                           mobs_sprite[mob_idx]->pointers[frame],

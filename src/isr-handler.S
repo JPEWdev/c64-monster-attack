@@ -8,6 +8,19 @@
 temp_collision:
     .byte 0
 
+    
+repeat_raster_sync:
+    ; The raster interrupt is repeating. Wait until the current VIC raster is
+    ; the correct value before starting
+    tya
+
+repeat_raster_loop:
+    cmp VIC_HLINE
+    beq repeat_raster
+    bcc repeat_raster
+
+    jmp repeat_raster_loop
+
 skip_rst_trampoline:
     jmp skip_rst
 
@@ -133,7 +146,7 @@ skip_last:
     sbc #$03
     cmp VIC_HLINE
     bcs set_next_raster
-    jmp repeat_raster
+    jmp repeat_raster_sync
 
 set_next_raster:
     sty VIC_HLINE
