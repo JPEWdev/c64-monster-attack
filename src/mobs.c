@@ -492,6 +492,21 @@ void update_mobs(void) {
         }
     }
 
+    // If not all MOBs were drawn, set the mobs with the lowest Y values (those
+    // guarenteed to be drawn) to invalid. This will prevent them from drawing,
+    // allowing the missing sprites to move up to a guaranteed slot. This
+    // effectively "flicker plexs" the sprites as a backup if they are bunched
+    // too close together (and by extension if there are more than 8 sprites on
+    // a raster line)
+    //
+    // Note that the sprite bottom will be recalculated on the next frame in
+    // the loop above
+    //
+    // This isn't a 100% ideal solution, but it is a very fast calculation
+    for (uint8_t i = 0; i < last_num_missed_sprites; i++) {
+        mobs_bot_y[mob_idx_by_y[i]] = 0xFF;
+    }
+
     sort_mobs_y();
 }
 

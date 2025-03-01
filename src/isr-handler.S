@@ -28,6 +28,7 @@ handle_missed_sprite:
     pla
     lda #$01
     sta missed_sprite,x
+    inc num_missed_sprites
     jmp skip_sprite
 
 isr_handler:

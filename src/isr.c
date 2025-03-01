@@ -36,6 +36,8 @@ bool missed_sprite[MAX_RASTER_CMDS] = {
     false,
 };
 bool last_missed_sprite[MAX_RASTER_CMDS];
+uint8_t num_missed_sprites;
+uint8_t last_num_missed_sprites;
 
 static uint8_t first_line;
 
@@ -45,6 +47,8 @@ void prepare_raster_cmds(void) {
         last_missed_sprite[i] = missed_sprite[i];
         missed_sprite[i] = false;
     }
+    last_num_missed_sprites = num_missed_sprites;
+    num_missed_sprites = 0;
 }
 
 void finish_raster_cmds(void) {

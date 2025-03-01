@@ -11,6 +11,7 @@
 
 extern uint8_t frame_count;
 extern bool last_missed_sprite[MAX_RASTER_CMDS];
+extern uint8_t last_num_missed_sprites;
 
 void isr_handler(void);
 
