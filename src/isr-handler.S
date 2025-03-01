@@ -142,6 +142,9 @@ skip_sprite:
 
 skip_last:
     tya
+    ; Decimal mode must be cleared in case the interrupt occurred during a BCD
+    ; calclulation
+    cld
     sec
     sbc #$03
     cmp VIC_HLINE
