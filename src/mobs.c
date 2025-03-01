@@ -24,7 +24,10 @@ static uint8_t mobs_in_use = 0;
 static uint8_t mob_update_idx = 0;
 
 static struct sprite const* mobs_sprite[MAX_MOBS];
-static struct bb mobs_bb[MAX_MOBS];
+static uint8_t mobs_bb_north[MAX_MOBS];
+static uint8_t mobs_bb_south[MAX_MOBS];
+static uint8_t mobs_bb_east[MAX_MOBS];
+static uint8_t mobs_bb_west[MAX_MOBS];
 static uint16_t mobs_map_x[MAX_MOBS];
 static uint8_t mobs_map_y[MAX_MOBS];
 static uint8_t mobs_bot_y[MAX_MOBS];
@@ -63,8 +66,7 @@ void init_mobs(void) {
 
 static void set_bot_y(uint8_t idx) {
     if (mobs_sprite[idx]) {
-        mobs_bot_y[idx] =
-            mobs_map_y[idx] + MAP_OFFSET_Y_PX + SPRITE_HEIGHT_PX / 2;
+        mobs_bot_y[idx] = mob_get_y(idx) + mobs_bb_south[idx];
     } else {
         mobs_bot_y[idx] = 0xFF;
     }
@@ -98,7 +100,12 @@ void mob_set_sprite(uint8_t idx, struct sprite const* sprite) {
 
 struct sprite const* mob_get_sprite(uint8_t idx) { return mobs_sprite[idx]; }
 
-void mob_set_bb(uint8_t idx, struct bb bb) { mobs_bb[idx] = bb; }
+void mob_set_bb(uint8_t idx, struct bb bb) {
+    mobs_bb_north[idx] = bb.north;
+    mobs_bb_south[idx] = bb.south;
+    mobs_bb_east[idx] = bb.east;
+    mobs_bb_west[idx] = bb.west;
+}
 
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_map_x[idx] = map_x;
@@ -183,7 +190,10 @@ uint8_t alloc_mob(void) {
             mobs_in_use |= setbit(i);
 
             mobs_sprite[i] = NULL;
-            memset(&mobs_bb[i], 0, sizeof(mobs_bb[i]));
+            mobs_bb_north[i] = 0;
+            mobs_bb_south[i] = SPRITE_HEIGHT_PX - 1;
+            mobs_bb_east[i] = SPRITE_WIDTH_PX - 1;
+            mobs_bb_west[i] = 0;
             mobs_map_x[i] = 0;
             mobs_map_y[i] = 0;
             mobs_bot_y[i] = 0xFF;
@@ -355,8 +365,11 @@ void draw_mobs(void) {
             sprite_multicolor &= ~mask;
         }
 
+        // Note: +2 is required because the bottom y is the bottom of the
+        // bounding box (not the distance from the y coordinate), and the
+        // raster interrupt is triggered at the start of the raster line
         mobs_raster_idx[mob_idx] = alloc_raster_cmd(
-            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]] + 1);
+            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]] + 2);
 
         raster_set_sprite(mobs_raster_idx[mob_idx], sprite_idx,
                           mobs_sprite[mob_idx]->pointers[frame],
@@ -488,10 +501,15 @@ bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
             last_missed_sprite[mobs_raster_idx[idx]]) {
             return false;
         }
-        const struct bb16 mob_bb =
-            bb_add_offset(&mobs_bb[idx], mob_get_x(idx), mob_get_y(idx));
 
-        return bb16_intersect(&mob_bb, &bb);
+        struct bb16 mob_bb16 = {
+            mob_get_y(idx) + mobs_bb_north[idx],
+            mob_get_y(idx) + mobs_bb_south[idx],
+            mob_get_x(idx) + mobs_bb_east[idx],
+            mob_get_x(idx) + mobs_bb_west[idx],
+        };
+
+        return bb16_intersect(&mob_bb16, &bb);
     }
     return false;
 }
