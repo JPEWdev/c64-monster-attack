@@ -7,7 +7,7 @@
 
 bcd_u16 bcd_add_u16(bcd_u16 a, bcd_u16 b) {
     bcd_u16 result;
-    __attribute__((leaf)) asm volatile(
+    __attribute__((leaf)) asm(
         "sed\n"
         "clc\n"
         "lda %1\n"
@@ -23,13 +23,13 @@ bcd_u16 bcd_add_u16(bcd_u16 a, bcd_u16 b) {
         "r"(a),
         "r"(b) :
         // Clobbers
-        "a", "c");
+        "a", "c", "v");
     return result;
 }
 
 bcd_u16 bcd_sub_u16(bcd_u16 minuend, bcd_u16 subtrahend) {
     bcd_u16 result;
-    __attribute__((leaf)) asm volatile(
+    __attribute__((leaf)) asm(
         "sed\n"
         "sec\n"
         "lda %1\n"
@@ -45,6 +45,6 @@ bcd_u16 bcd_sub_u16(bcd_u16 minuend, bcd_u16 subtrahend) {
         "r"(minuend),
         "r"(subtrahend) :
         // Clobbers
-        "a", "c");
+        "a", "c", "v");
     return result;
 }
