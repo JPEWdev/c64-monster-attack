@@ -95,33 +95,43 @@ void int_to_string(int16_t i, char str[7]) {
     }
 }
 
-static uint8_t add_bcd_char(uint8_t v, char* c, bool* lead_zero) {
-    if (!*lead_zero && !v) {
-        return 0;
-    }
-    if (v < 10) {
-        *c = '0' + v;
-        *lead_zero = true;
-        return 1;
-    }
-    *c = 'X';
-    return 1;
+static char get_hex_char(uint8_t n) {
+    char result;
+    // A neat trick is that adding '0' to the nibble in BCD mode will correctly
+    // choose the correct hex character, since the overflow when >= 10 will
+    // place the index into the upper case numbers
+    __attribute__((leaf)) asm(
+        "sed\n"
+        "cmp #10\n"
+        "adc #%2\n"
+        "cld\n" :
+        // Output
+        "+a"(result) :
+        // Input
+        "a"(n),
+        "i"('0') :
+        // Clobbers
+        "c", "v");
+    return result;
 }
 
-uint8_t bcd_u16_to_string(bcd_u16 i, char str[5]) {
-    if (i == 0) {
-        str[0] = '0';
-        str[1] = '\0';
-        return 1;
+// Converts a uint16_t to a hexadecimal string. The uint16_t can be either
+// binary, or BCD
+uint8_t u16_to_string(uint16_t v, char str[5]) {
+    uint8_t num_chars = 1;
+    if (v & 0xF000) {
+        num_chars = 4;
+    } else if (v & 0x0F00) {
+        num_chars = 3;
+    } else if (v & 0x00F0) {
+        num_chars = 2;
     }
-    char* c = str;
-    bool lead_zero = false;
-    c += add_bcd_char(i >> 12, c, &lead_zero);
-    c += add_bcd_char((i >> 8) & 0xF, c, &lead_zero);
-    c += add_bcd_char((i >> 4) & 0xF, c, &lead_zero);
-    c += add_bcd_char(i & 0xF, c, &lead_zero);
-    *c = '\0';
-    return c - str;
+    str[num_chars] = '\0';
+    for (uint8_t i = 1; i <= num_chars; i++) {
+        str[num_chars - i] = get_hex_char(v & 0xF);
+        v = v >> 4;
+    }
+    return num_chars;
 }
 
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,

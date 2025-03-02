@@ -486,14 +486,14 @@ void game_loop(void) {
             player_health_changed = false;
             draw_health = true;
         } else if (score_updated) {
-            bcd_u16_to_string(score, &score_string_buf[10]);
+            u16_to_string(score, &score_string_buf[10]);
             score_updated = false;
             draw_score = true;
 
         } else if (player_coins_changed) {
             pad_string(
                 &coin_string_buf[1], sizeof(coin_string_buf) - 1,
-                bcd_u16_to_string(player_get_coins(), &coin_string_buf[1]));
+                u16_to_string(player_get_coins(), &coin_string_buf[1]));
 
             player_coins_changed = false;
             draw_coins = true;
