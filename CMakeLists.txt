@@ -67,9 +67,11 @@ list(APPEND SOURCES
     src/isr-handler.S
     src/isr.c
     src/main.c
+    src/mobs/arrow.c
     src/mobs/coin.c
     src/mobs/heart.c
     src/mobs/skeleton.c
+    src/mobs/skeleton_archer.c
     src/move.c
     src/player.c
     src/util.c
@@ -77,7 +79,10 @@ list(APPEND SOURCES
 )
 
 list(APPEND SPRITES
-    sprites/arrow.spm
+    sprites/arrow_north.spm
+    sprites/arrow_south.spm
+    sprites/arrow_east.spm
+    sprites/arrow_west.spm
     sprites/coin.spm
     sprites/heart.spm
     sprites/player_attack_east.spm

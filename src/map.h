@@ -45,6 +45,12 @@
 #define QUAD_X_TO_PX(x) (MAP_OFFSET_X_PX + ((x) * QUAD_WIDTH_PX))
 #define QUAD_Y_TO_PX(y) (MAP_OFFSET_Y_PX + ((y) * QUAD_WIDTH_PX))
 
+#define SAME_QUAD_X(x1, x2) \
+    (((x1) & ~(QUAD_WIDTH_PX - 1)) == ((x2) & ~(QUAD_WIDTH_PX - 1)))
+
+#define SAME_QUAD_Y(y1, y2) \
+    (((y1) & ~(QUAD_HEIGHT_PX - 1)) == ((y2) & ~(QUAD_HEIGHT_PX - 1)))
+
 enum {
     MAP_IMAGE_TREE,
     MAP_IMAGE_ROCK,

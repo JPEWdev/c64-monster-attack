@@ -69,6 +69,10 @@ static bcd_u16 score = 0;
 static bool score_updated;
 static bool is_ntsc;
 
+static struct {
+    uint8_t arrow_cool_down[MAX_MOBS];
+} skeleton_archer;
+
 static uint8_t quad_distance(uint8_t quad_x1, uint8_t quad_y1, uint8_t quad_x2,
                              uint8_t quad_y2) {
     uint16_t xdist;
@@ -88,121 +92,176 @@ static uint8_t quad_distance(uint8_t quad_x1, uint8_t quad_y1, uint8_t quad_x2,
     return xdist + ydist;
 }
 
+static void random_move(uint8_t mob_quad_x, uint8_t mob_quad_y,
+                        uint8_t* next_quad_x, uint8_t* next_quad_y) {
+    // Randomly pick a direction. If that quad is passable, move there
+    // otherwise check the other directions
+    uint8_t r = rand();
+#pragma clang loop unroll(full)
+    for (uint8_t i = 0; i < 4; i++) {
+        switch ((r + i & 0x3)) {
+            case NORTH:
+                if (mob_quad_y > 0 &&
+                    map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
+                    *next_quad_x = mob_quad_x;
+                    *next_quad_y = mob_quad_y - 1;
+                    return;
+                }
+                break;
+            case SOUTH:
+                if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
+                    map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
+                    *next_quad_x = mob_quad_x;
+                    *next_quad_y = mob_quad_y + 1;
+                    return;
+                }
+                break;
+            case EAST:
+                if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
+                    map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
+                    *next_quad_x = mob_quad_x + 1;
+                    *next_quad_y = mob_quad_y;
+                    return;
+                }
+                break;
+            case WEST:
+                if (mob_quad_x > 0 &&
+                    map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
+                    *next_quad_x = mob_quad_x - 1;
+                    *next_quad_y = mob_quad_y;
+                    return;
+                }
+                break;
+        }
+    }
+}
+
+static void move_relative_quad(bool toward, uint8_t r, uint8_t mob_quad_x,
+                               uint8_t mob_quad_y, uint8_t target_quad_x,
+                               uint8_t target_quad_y, uint8_t* next_quad_x,
+                               uint8_t* next_quad_y) {
+    // Move relative to the player
+    //
+    // Check all 4 directions, starting with a random one, and choose the
+    // one that has the shortest distance
+    uint8_t best_dist = 0xFF;
+    if (toward) {
+        best_dist = 0xFF;
+    } else {
+        best_dist = 0;
+    }
+#pragma clang loop unroll(full)
+    for (uint8_t i = 0; i < 4; i++) {
+        switch ((r + i & 0x3)) {
+            case NORTH:
+                if (mob_quad_y > 0 &&
+                    map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
+                    uint8_t d = quad_distance(mob_quad_x, mob_quad_y - 1,
+                                              target_quad_x, target_quad_y);
+                    if ((toward && d < best_dist) ||
+                        (!toward && d > best_dist)) {
+                        best_dist = d;
+                        *next_quad_x = mob_quad_x;
+                        *next_quad_y = mob_quad_y - 1;
+                    }
+                }
+                break;
+
+            case SOUTH:
+                if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
+                    map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
+                    uint8_t d = quad_distance(mob_quad_x, mob_quad_y + 1,
+                                              target_quad_x, target_quad_y);
+                    if ((toward && d < best_dist) ||
+                        (!toward && d > best_dist)) {
+                        best_dist = d;
+                        *next_quad_x = mob_quad_x;
+                        *next_quad_y = mob_quad_y + 1;
+                    }
+                }
+                break;
+
+            case EAST:
+                if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
+                    map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
+                    uint16_t d = quad_distance(mob_quad_x + 1, mob_quad_y,
+                                               target_quad_x, target_quad_y);
+                    if ((toward && d < best_dist) ||
+                        (!toward && d > best_dist)) {
+                        best_dist = d;
+                        *next_quad_x = mob_quad_x + 1;
+                        *next_quad_y = mob_quad_y;
+                    }
+                }
+                break;
+
+            case WEST:
+                if (mob_quad_x > 0 &&
+                    map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
+                    uint16_t d = quad_distance(mob_quad_x - 1, mob_quad_y,
+                                               target_quad_x, target_quad_y);
+                    if ((toward && d < best_dist) ||
+                        (!toward && d > best_dist)) {
+                        best_dist = d;
+                        *next_quad_x = mob_quad_x - 1;
+                        *next_quad_y = mob_quad_y;
+                    }
+                }
+                break;
+        }
+    }
+}
+
 static void skeleton_reached_target(uint8_t idx) {
     uint8_t mob_quad_x = mob_get_quad_x(idx);
     uint8_t mob_quad_y = mob_get_quad_y(idx);
     uint8_t next_quad_x = mob_quad_x;
     uint8_t next_quad_y = mob_quad_y;
-    uint8_t player_quad_x = player_get_quad_x();
-    uint8_t player_quad_y = player_get_quad_y();
 
     uint8_t r = rand();
     if (r & 0xC) {
-        // Move toward the player
-        //
-        // Check all 4 directions, starting with a random one, and choose the
-        // one that has the shortest distance to the player
-        uint8_t best_dist = 0xFF;
-#pragma clang loop unroll(full)
-        for (uint8_t i = 0; i < 4; i++) {
-            switch ((r + i & 0x3)) {
-                case NORTH:
-                    if (mob_quad_y > 0 &&
-                        map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
-                        uint8_t d = quad_distance(mob_quad_x, mob_quad_y - 1,
-                                                  player_quad_x, player_quad_y);
-                        if (d < best_dist) {
-                            best_dist = d;
-                            next_quad_x = mob_quad_x;
-                            next_quad_y = mob_quad_y - 1;
-                        }
-                    }
-                    break;
-                case SOUTH:
-                    if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
-                        map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
-                        uint8_t d = quad_distance(mob_quad_x, mob_quad_y + 1,
-                                                  player_quad_x, player_quad_y);
-                        if (d < best_dist) {
-                            best_dist = d;
-                            next_quad_x = mob_quad_x;
-                            next_quad_y = mob_quad_y + 1;
-                        }
-                    }
-                    break;
-                case EAST:
-                    if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
-                        map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
-                        uint16_t d =
-                            quad_distance(mob_quad_x + 1, mob_quad_y,
-                                          player_quad_x, player_quad_y);
-                        if (d < best_dist) {
-                            best_dist = d;
-                            next_quad_x = mob_quad_x + 1;
-                            next_quad_y = mob_quad_y;
-                        }
-                    }
-                    break;
-                case WEST:
-                    if (mob_quad_x > 0 &&
-                        map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
-                        uint16_t d =
-                            quad_distance(mob_quad_x - 1, mob_quad_y,
-                                          player_quad_x, player_quad_y);
-                        if (d < best_dist) {
-                            best_dist = d;
-                            next_quad_x = mob_quad_x - 1;
-                            next_quad_y = mob_quad_y;
-                        }
-                    }
-                    break;
-            }
-        }
+        move_relative_quad(true, r, mob_quad_x, mob_quad_y, player_get_quad_x(),
+                           player_get_quad_y(), &next_quad_x, &next_quad_y);
     } else {
-        // Random move
-        //
-        // Randomly pick a direction. If that quad is passable, move there
-        // otherwise check the other directions
-#pragma clang loop unroll(full)
-        for (uint8_t i = 0; i < 4; i++) {
-            switch ((r + i & 0x3)) {
-                case NORTH:
-                    if (mob_quad_y > 0 &&
-                        map_tile_is_passable(mob_quad_x, mob_quad_y - 1)) {
-                        next_quad_x = mob_quad_x;
-                        next_quad_y = mob_quad_y - 1;
-                        goto done;
-                    }
-                    break;
-                case SOUTH:
-                    if (mob_quad_y < MAP_HEIGHT_QUAD - 1 &&
-                        map_tile_is_passable(mob_quad_x, mob_quad_y + 1)) {
-                        next_quad_x = mob_quad_x;
-                        next_quad_y = mob_quad_y + 1;
-                        goto done;
-                    }
-                    break;
-                case EAST:
-                    if (mob_quad_x < MAP_WIDTH_QUAD - 1 &&
-                        map_tile_is_passable(mob_quad_x + 1, mob_quad_y)) {
-                        next_quad_x = mob_quad_x + 1;
-                        next_quad_y = mob_quad_y;
-                        goto done;
-                    }
-                    break;
-                case WEST:
-                    if (mob_quad_x > 0 &&
-                        map_tile_is_passable(mob_quad_x - 1, mob_quad_y)) {
-                        next_quad_x = mob_quad_x - 1;
-                        next_quad_y = mob_quad_y;
-                        goto done;
-                    }
-                    break;
-            }
-        }
+        random_move(mob_quad_x, mob_quad_y, &next_quad_x, &next_quad_y);
     }
 
-done:
+    mob_set_target(idx, next_quad_x * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2,
+                   next_quad_y * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2);
+}
+
+static void skeleton_archer_reached_target(uint8_t idx) {
+    uint8_t mob_quad_x = mob_get_quad_x(idx);
+    uint8_t mob_quad_y = mob_get_quad_y(idx);
+    uint8_t next_quad_x = mob_quad_x;
+    uint8_t next_quad_y = mob_quad_y;
+
+    uint8_t r = rand();
+    switch (r & 0x70) {
+        case 0x00:
+        case 0x10:
+            // Move away from player
+            move_relative_quad(false, r, mob_quad_x, mob_quad_y,
+                               player_get_quad_x(), player_get_quad_y(),
+                               &next_quad_x, &next_quad_y);
+            break;
+
+        case 0x20:
+        case 0x30:
+        case 0x40:
+            // Move toward center of map
+            move_relative_quad(true, r, mob_quad_x, mob_quad_y,
+                               MAP_WIDTH_QUAD / 2, MAP_HEIGHT_QUAD / 2,
+                               &next_quad_x, &next_quad_y);
+            break;
+
+        case 0x50:
+        case 0x60:
+        case 0x70:
+            random_move(mob_quad_x, mob_quad_y, &next_quad_x, &next_quad_y);
+            break;
+    }
+
     mob_set_target(idx, next_quad_x * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2,
                    next_quad_y * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2);
 }
@@ -228,15 +287,112 @@ static void skeleton_player_collision(uint8_t idx) {
     }
 }
 
+static void arrow_player_collision(uint8_t idx) {
+    enum direction dir = arrow_get_direction(idx);
+    uint16_t x = mob_get_map_x(idx);
+    uint8_t y = mob_get_map_y(idx);
+    kill_mob(idx);
+
+    switch (dir) {
+        case NORTH:
+            if (player_dir == SOUTH && sword_state != SWORD_VISIBLE) {
+                uint8_t arrow_idx = create_blocked_arrow(x, y);
+                if (arrow_idx != MAX_MOBS) {
+                    mob_set_target(arrow_idx, x + 5, y + 5);
+                    mob_set_speed(arrow_idx, 1, 2);
+                }
+            } else {
+                damage_player_push(1, 0, -1);
+            }
+            break;
+
+        case SOUTH:
+            if (player_dir == NORTH && sword_state != SWORD_VISIBLE) {
+                uint8_t arrow_idx = create_blocked_arrow(x, y);
+                if (arrow_idx != MAX_MOBS) {
+                    mob_set_target(arrow_idx, x + 5, y - 5);
+                    mob_set_speed(arrow_idx, 1, 2);
+                }
+            } else {
+                damage_player_push(1, 0, 1);
+            }
+            break;
+
+        case EAST:
+            if (player_dir == WEST && sword_state != SWORD_VISIBLE) {
+                uint8_t arrow_idx = create_blocked_arrow(x, y);
+                if (arrow_idx != MAX_MOBS) {
+                    mob_set_target(arrow_idx, x - 5, y + 5);
+                    mob_set_speed(arrow_idx, 1, 2);
+                }
+            } else {
+                damage_player_push(1, 1, 0);
+            }
+            break;
+
+        case WEST:
+            if (player_dir == EAST && sword_state != SWORD_VISIBLE) {
+                uint8_t arrow_idx = create_blocked_arrow(x, y);
+                if (arrow_idx != MAX_MOBS) {
+                    mob_set_target(arrow_idx, x - 5, y + 5);
+                    mob_set_speed(arrow_idx, 1, 2);
+                }
+            } else {
+                damage_player_push(1, -1, 0);
+            }
+            break;
+    }
+}
+
+static void shoot_arrow(uint8_t idx, enum direction direction,
+                        uint16_t target_x, uint8_t target_y) {
+    uint8_t arrow_idx =
+        create_arrow(mob_get_map_x(idx), mob_get_map_y(idx), direction);
+
+    if (arrow_idx == MAX_MOBS) {
+        return;
+    }
+
+    mob_set_target(arrow_idx, target_x, target_y);
+    mob_set_player_collision_handler(arrow_idx, arrow_player_collision);
+
+    // 2 second cool down
+    skeleton_archer.arrow_cool_down[idx] = 100;
+}
+
+static void skeleton_archer_update(uint8_t idx, uint8_t num_frames) {
+    if (skeleton_archer.arrow_cool_down[idx] < num_frames) {
+        skeleton_archer.arrow_cool_down[idx] = 0;
+    } else {
+        skeleton_archer.arrow_cool_down[idx] -= num_frames;
+    }
+
+    if (skeleton_archer.arrow_cool_down[idx] == 0) {
+        if (SAME_QUAD_X(player_map_x, mob_get_map_x(idx))) {
+            if (player_map_y < mob_get_map_y(idx)) {
+                shoot_arrow(idx, NORTH, mob_get_map_x(idx), 0);
+            } else {
+                shoot_arrow(idx, SOUTH, mob_get_map_x(idx), MAP_HEIGHT_PX);
+            }
+        } else if (SAME_QUAD_Y(player_map_y, mob_get_map_y(idx))) {
+            if (player_map_x < mob_get_map_x(idx)) {
+                shoot_arrow(idx, WEST, 0, mob_get_map_y(idx));
+            } else {
+                shoot_arrow(idx, EAST, MAP_WIDTH_PX, mob_get_map_y(idx));
+            }
+        }
+    }
+}
+
 static void on_skeleton_kill(uint8_t idx);
 
 static bool new_skeleton(void) {
     uint8_t quad_x;
     uint8_t quad_y;
 
+    uint8_t p;
     do {
-        uint8_t p = rand();
-
+        p = rand();
         switch (p & 0x03) {
             case 0:
                 // North side
@@ -267,18 +423,33 @@ static bool new_skeleton(void) {
     uint16_t x = quad_x * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2;
     uint8_t y = quad_y * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
 
-    uint8_t idx = create_skeleton(x, y);
-    if (idx == MAX_MOBS) {
-        return false;
+    if (p & 0x0C) {
+        uint8_t idx = create_skeleton(x, y);
+        if (idx == MAX_MOBS) {
+            return false;
+        }
+
+        mob_set_death_handler(idx, on_skeleton_kill);
+        mob_set_target(idx, x, y);
+        mob_set_reached_target_handler(idx, skeleton_reached_target);
+        mob_set_player_collision_handler(idx, skeleton_player_collision);
+        mob_set_speed(idx, 1, 1 + (rand() & 0x3));
+
+        skeleton_reached_target(idx);
+    } else {
+        uint8_t idx = create_skeleton_archer(x, y);
+        if (idx == MAX_MOBS) {
+            return false;
+        }
+        skeleton_archer.arrow_cool_down[idx] = 50;
+        mob_set_death_handler(idx, on_skeleton_kill);
+        mob_set_target(idx, x, y);
+        mob_set_reached_target_handler(idx, skeleton_archer_reached_target);
+        mob_set_player_collision_handler(idx, skeleton_player_collision);
+        mob_set_update_handler(idx, skeleton_archer_update);
+
+        skeleton_archer_reached_target(idx);
     }
-
-    mob_set_death_handler(idx, on_skeleton_kill);
-    mob_set_target(idx, x, y);
-    mob_set_reached_target_handler(idx, skeleton_reached_target);
-    mob_set_player_collision_handler(idx, skeleton_player_collision);
-    mob_set_speed(idx, 1, 1 + (rand() & 0x3));
-
-    skeleton_reached_target(idx);
 
     return true;
 }
@@ -595,7 +766,9 @@ int main() {
 
         destroy_all_mobs();
 
-        while (new_skeleton());
+        for (uint8_t i = 0; i < 6; i++) {
+            new_skeleton();
+        }
 
         fill_color(START_TEXT_X, START_TEXT_Y,
                    START_TEXT_X + sizeof(start_text), START_TEXT_Y,

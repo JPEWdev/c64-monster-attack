@@ -57,7 +57,11 @@ void kill_mob(uint8_t idx);
 bool check_mob_collision(uint8_t idx, struct bb16 const bb);
 
 uint8_t create_skeleton(uint16_t map_x, uint8_t map_y);
+uint8_t create_skeleton_archer(uint16_t map_x, uint8_t map_y);
 uint8_t create_coin(uint16_t map_x, uint8_t map_y, bcd_u8 value);
 uint8_t create_heart(uint16_t map_x, uint8_t map_y);
+uint8_t create_arrow(uint16_t map_x, uint8_t map_y, enum direction direction);
+enum direction arrow_get_direction(uint8_t idx);
+uint8_t create_blocked_arrow(uint16_t map_x, uint8_t map_y);
 
 #endif
