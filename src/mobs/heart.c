@@ -26,7 +26,7 @@ static void heart_update(uint8_t idx, uint8_t num_frames) {
     }
 
     if (heart_data.ttl[idx] <= 120) {
-        mob_set_sprite(idx, mob_get_sprite(idx) ? NULL : &heart);
+        mob_set_sprite(idx, mob_has_sprite(idx) ? NULL : &heart);
     }
 }
 

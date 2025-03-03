@@ -4,9 +4,9 @@
 #ifndef MOBS_H
 #define MOBS_H
 
+#include "bcd.h"
 #include "sprite.h"
 #include "util.h"
-#include "bcd.h"
 
 #define MAX_MOBS (8)
 
@@ -18,7 +18,7 @@ typedef void (*mob_update_handler)(uint8_t idx, uint8_t num_frames);
 
 void init_mobs(void);
 void mob_set_sprite(uint8_t idx, struct sprite const* sprite);
-struct sprite const* mob_get_sprite(uint8_t idx);
+uint8_t mob_has_sprite(uint8_t idx);
 void mob_set_bb(uint8_t idx, struct bb bb);
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y);
 uint16_t mob_get_x(uint8_t idx);

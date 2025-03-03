@@ -20,9 +20,31 @@
 #define MOB_SPRITE_OFFSET (2)
 #define DAMAGE_PUSH (3)
 
-static uint8_t mobs_in_use = 0;
+#define MOB_FLAG_IN_USE _BV(0)
+#define MOB_FLAG_REACHED_TARGET _BV(1)
+#define MOB_FLAG_HAS_SPRITE _BV(2)
+
+#define mob_check_flag(idx, _flag) (mobs_flags[idx] & MOB_FLAG_##_flag)
+#define mob_set_flag(idx, _flag) (mobs_flags[idx] |= MOB_FLAG_##_flag)
+#define mob_clr_flag(idx, _flag) (mobs_flags[idx] &= ~(MOB_FLAG_##_flag))
+
+#define MOB_HANDLER_FLAG_PLAYER_COLLISION _BV(0)
+#define MOB_HANDLER_FLAG_SWORD_COLLISION _BV(1)
+#define MOB_HANDLER_FLAG_DEATH _BV(2)
+#define MOB_HANDLER_FLAG_REACHED_TARGET _BV(3)
+#define MOB_HANDLER_FLAG_UPDATE _BV(4)
+
+#define mob_check_handler_flag(idx, _handler) \
+    (mobs_handler_flags[idx] & MOB_HANDLER_FLAG_##_handler)
+#define mob_set_handler_flag(idx, _handler) \
+    (mobs_handler_flags[idx] |= MOB_HANDLER_FLAG_##_handler)
+#define mob_clr_handler_flag(idx, _handler) \
+    (mobs_handler_flags[idx] &= ~(MOB_HANDLER_FLAG_##_handler))
+
 static uint8_t mob_update_idx = 0;
 
+static uint8_t mobs_flags[MAX_MOBS] = {0};
+static uint8_t mobs_handler_flags[MAX_MOBS];
 static struct sprite const* mobs_sprite[MAX_MOBS];
 static uint8_t mobs_bb_north[MAX_MOBS];
 static uint8_t mobs_bb_south[MAX_MOBS];
@@ -50,8 +72,6 @@ static mob_action_handler mobs_on_death[MAX_MOBS];
 static mob_action_handler mobs_on_reached_target[MAX_MOBS];
 static mob_update_handler mobs_on_update[MAX_MOBS];
 static uint8_t mobs_speed_counter[MAX_MOBS];
-static bool mobs_needs_redraw[MAX_MOBS];
-static bool mobs_reached_target[MAX_MOBS];
 static uint8_t mobs_last_update_frame[MAX_MOBS];
 static uint8_t mobs_raster_idx[MAX_MOBS];
 
@@ -65,7 +85,7 @@ void init_mobs(void) {
 }
 
 static void set_bot_y(uint8_t idx) {
-    if (mobs_sprite[idx]) {
+    if (mob_check_flag(idx, HAS_SPRITE)) {
         mobs_bot_y[idx] = mob_get_y(idx) + mobs_bb_south[idx];
     } else {
         mobs_bot_y[idx] = 0xFF;
@@ -94,11 +114,16 @@ static void sort_mobs_y(void) {
 
 void mob_set_sprite(uint8_t idx, struct sprite const* sprite) {
     mobs_sprite[idx] = sprite;
+    if (sprite) {
+        mob_set_flag(idx, HAS_SPRITE);
+    } else {
+        mob_clr_flag(idx, HAS_SPRITE);
+    }
     mobs_sprite_frame[idx] = 0;
     set_bot_y(idx);
 }
 
-struct sprite const* mob_get_sprite(uint8_t idx) { return mobs_sprite[idx]; }
+uint8_t mob_has_sprite(uint8_t idx) { return mob_check_flag(idx, HAS_SPRITE); }
 
 void mob_set_bb(uint8_t idx, struct bb bb) {
     mobs_bb_north[idx] = bb.north;
@@ -150,34 +175,59 @@ void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y) {
 void mob_set_sword_collision_handler(uint8_t idx,
                                      mob_sword_collision_handler handler) {
     mobs_on_sword_collision[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, SWORD_COLLISION);
+    } else {
+        mob_clr_handler_flag(idx, SWORD_COLLISION);
+    }
 }
 
 void mob_trigger_sword_collision(uint8_t idx, uint8_t damage) {
-    if (mobs_on_sword_collision[idx]) {
+    if (mob_check_handler_flag(idx, SWORD_COLLISION)) {
         mobs_on_sword_collision[idx](idx, damage);
     }
 }
 
 void mob_set_player_collision_handler(uint8_t idx, mob_action_handler handler) {
     mobs_on_player_collision[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, PLAYER_COLLISION);
+    } else {
+        mob_clr_handler_flag(idx, PLAYER_COLLISION);
+    }
 }
 
 void mob_trigger_player_collision(uint8_t idx) {
-    if (mobs_on_player_collision[idx]) {
+    if (mob_check_handler_flag(idx, PLAYER_COLLISION)) {
         mobs_on_player_collision[idx](idx);
     }
 }
 
 void mob_set_death_handler(uint8_t idx, mob_action_handler handler) {
     mobs_on_death[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, DEATH);
+    } else {
+        mob_clr_handler_flag(idx, DEATH);
+    }
 }
 
 void mob_set_reached_target_handler(uint8_t idx, mob_action_handler handler) {
     mobs_on_reached_target[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, REACHED_TARGET);
+    } else {
+        mob_clr_handler_flag(idx, REACHED_TARGET);
+    }
 }
 
 void mob_set_update_handler(uint8_t idx, mob_update_handler handler) {
     mobs_on_update[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, UPDATE);
+    } else {
+        mob_clr_handler_flag(idx, UPDATE);
+    }
 }
 
 void mob_set_animation_rate(uint8_t idx, uint8_t frames) {
@@ -186,8 +236,9 @@ void mob_set_animation_rate(uint8_t idx, uint8_t frames) {
 
 uint8_t alloc_mob(void) {
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        if ((mobs_in_use & setbit(i)) == 0) {
-            mobs_in_use |= setbit(i);
+        if (!mob_check_flag(i, IN_USE)) {
+            mobs_flags[i] = MOB_FLAG_IN_USE;
+            mobs_handler_flags[i] = 0;
 
             mobs_sprite[i] = NULL;
             mobs_bb_north[i] = 0;
@@ -220,8 +271,6 @@ uint8_t alloc_mob(void) {
             mobs_on_update[i] = NULL;
 
             mobs_speed_counter[i] = 1;
-            mobs_needs_redraw[i] = true;
-            mobs_reached_target[i] = false;
             mobs_last_update_frame[i] = frame_count;
             return i;
         }
@@ -230,7 +279,7 @@ uint8_t alloc_mob(void) {
 }
 
 void destroy_mob(uint8_t idx) {
-    mobs_in_use &= clrbit(idx);
+    mob_clr_flag(idx, IN_USE);
     // Set the Y position to max value so this sprite sorts to the end of the
     // list
     mobs_bot_y[idx] = 0xFF;
@@ -238,7 +287,7 @@ void destroy_mob(uint8_t idx) {
 
 void destroy_all_mobs(void) {
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        if (mobs_in_use & setbit(i)) {
+        if (mob_check_flag(i, IN_USE)) {
             destroy_mob(i);
         }
     }
@@ -418,7 +467,7 @@ void update_mobs(void) {
     bool called_reached_target = false;
 
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        if ((mobs_in_use & setbit(i)) == 0) {
+        if (!mob_check_flag(i, IN_USE)) {
             continue;
         }
 
@@ -459,9 +508,8 @@ void update_mobs(void) {
                     }
 
                     if (mobs_map_x[i] == mobs_target_map_x[i] &&
-                        mobs_map_y[i] == mobs_target_map_y[i] &&
-                        mobs_on_reached_target[i]) {
-                        mobs_reached_target[i] = true;
+                        mobs_map_y[i] == mobs_target_map_y[i]) {
+                        mob_set_flag(i, REACHED_TARGET);
                     }
                 }
             }
@@ -469,16 +517,18 @@ void update_mobs(void) {
 
         set_bot_y(i);
 
-        if (mobs_reached_target[i] && !called_reached_target) {
-            mobs_on_reached_target[i](i);
-            mobs_reached_target[i] = false;
-            called_reached_target = true;
+        if (mob_check_flag(i, REACHED_TARGET) && !called_reached_target) {
+            if (mob_check_handler_flag(i, REACHED_TARGET)) {
+                mobs_on_reached_target[i](i);
+                called_reached_target = true;
+            }
+            mob_clr_flag(i, REACHED_TARGET);
         }
     }
 
     if (!called_reached_target) {
-        if ((mobs_in_use & setbit(mob_update_idx)) &&
-            mobs_on_update[mob_update_idx]) {
+        if (mob_check_flag(mob_update_idx, IN_USE) &&
+            mob_check_handler_flag(mob_update_idx, UPDATE)) {
             mobs_on_update[mob_update_idx](
                 mob_update_idx,
                 frame_count - mobs_last_update_frame[mob_update_idx]);
@@ -515,7 +565,7 @@ void update_mobs(void) {
 }
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
-    if (mobs_in_use & setbit(idx)) {
+    if (mob_check_flag(idx, IN_USE)) {
         if (mobs_raster_idx[idx] != 0xFF &&
             last_missed_sprite[mobs_raster_idx[idx]]) {
             return false;
@@ -576,7 +626,7 @@ void damage_mob_pushback(uint8_t idx, uint8_t damage) {
 }
 
 void kill_mob(uint8_t idx) {
-    if (mobs_on_death[idx]) {
+    if (mob_check_handler_flag(idx, DEATH)) {
         mobs_on_death[idx](idx);
     } else {
         destroy_mob(idx);

@@ -28,7 +28,7 @@ static void coin_update(uint8_t idx, uint8_t num_frames) {
     }
 
     if (coin_data.ttl[idx] <= 120) {
-        mob_set_sprite(idx, mob_get_sprite(idx) ? NULL : &coin);
+        mob_set_sprite(idx, mob_has_sprite(idx) ? NULL : &coin);
     }
 }
 
