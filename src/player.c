@@ -239,15 +239,11 @@ void draw_player(void) {
         }
     }
 
-    DISABLE_INTERRUPTS() {
-        ALL_RAM() {
-            sprite_pointers[PLAYER_SPRITE_IDX] =
-                sprite->pointers[player_dir][player_frame];
-            if (sword_state == SWORD_VISIBLE) {
-                sprite_pointers[SWORD_SPRITE_IDX] =
-                    sword_sprite.pointers[player_dir][sword_frame];
-            }
-        }
+    sprite_pointers_shadow[PLAYER_SPRITE_IDX] =
+        sprite->pointers[player_dir][player_frame];
+    if (sword_state == SWORD_VISIBLE) {
+        sprite_pointers_shadow[SWORD_SPRITE_IDX] =
+            sword_sprite.pointers[player_dir][sword_frame];
     }
     VICII_SPRITE_ENABLE = sprite_enable;
     VICII_SPRITE_MSB = sprite_msb;

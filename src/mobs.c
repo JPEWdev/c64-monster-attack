@@ -294,9 +294,8 @@ void draw_mobs(void) {
 
         uint8_t frame = animate_mob(mob_idx);
 
-        ALL_RAM() {
-            sprite_pointers[sprite_idx] = mobs_sprite[mob_idx]->pointers[frame];
-        };
+        sprite_pointers_shadow[sprite_idx] =
+            mobs_sprite[mob_idx]->pointers[frame];
 
         uint8_t flags = mobs_sprite[mob_idx]->flags[frame];
 

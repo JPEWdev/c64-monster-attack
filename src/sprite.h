@@ -49,4 +49,7 @@ struct animation {
 _Static_assert(sizeof(struct animation) == 4,
                "Animation struct size must be power of 2");
 
+extern uint8_t sprite_pointers_shadow[8];
+void update_sprite_pointers();
+
 #endif  // SPRITE_H

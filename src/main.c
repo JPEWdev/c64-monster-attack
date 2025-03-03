@@ -453,6 +453,8 @@ void game_loop(void) {
             finish_raster_cmds();
         }
 
+        update_sprite_pointers();
+
         // Frame non critical. These can be done during the frame since they
         // don't affect graphics
         DEBUG_COLOR(COLOR_GREEN);
