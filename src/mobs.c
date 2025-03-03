@@ -50,6 +50,12 @@ static uint8_t mobs_bb_north[MAX_MOBS];
 static uint8_t mobs_bb_south[MAX_MOBS];
 static uint8_t mobs_bb_east[MAX_MOBS];
 static uint8_t mobs_bb_west[MAX_MOBS];
+
+static uint8_t mobs_bb16_north[MAX_MOBS];
+static uint8_t mobs_bb16_south[MAX_MOBS];
+static uint16_t mobs_bb16_east[MAX_MOBS];
+static uint16_t mobs_bb16_west[MAX_MOBS];
+
 static uint16_t mobs_map_x[MAX_MOBS];
 static uint8_t mobs_map_y[MAX_MOBS];
 static uint8_t mobs_bot_y[MAX_MOBS];
@@ -92,6 +98,13 @@ static void set_bot_y(uint8_t idx) {
     }
 }
 
+static void mob_calc_bb16(uint8_t idx) {
+    mobs_bb16_north[idx] = mob_get_y(idx) + mobs_bb_north[idx];
+    mobs_bb16_south[idx] = mob_get_y(idx) + mobs_bb_south[idx];
+    mobs_bb16_west[idx] = mob_get_x(idx) + mobs_bb_west[idx];
+    mobs_bb16_east[idx] = mob_get_x(idx) + mobs_bb_east[idx];
+}
+
 // Ocean sort method
 static void sort_mobs_y(void) {
     for (uint8_t i = 0; i < MAX_MOBS - 1; i++) {
@@ -130,12 +143,15 @@ void mob_set_bb(uint8_t idx, struct bb bb) {
     mobs_bb_south[idx] = bb.south;
     mobs_bb_east[idx] = bb.east;
     mobs_bb_west[idx] = bb.west;
+
+    mob_calc_bb16(idx);
 }
 
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_map_x[idx] = map_x;
     mobs_map_y[idx] = map_y;
     set_bot_y(idx);
+    mob_calc_bb16(idx);
 }
 
 uint16_t mob_get_x(uint8_t idx) {
@@ -234,6 +250,18 @@ void mob_set_animation_rate(uint8_t idx, uint8_t frames) {
     mobs_animation_rate[idx] = frames;
 }
 
+static void mob_inc_x(uint8_t idx, int8_t delta) {
+    mobs_map_x[idx] += delta;
+    mobs_bb16_east[idx] += delta;
+    mobs_bb16_west[idx] += delta;
+}
+
+static void mob_inc_y(uint8_t idx, int8_t delta) {
+    mobs_map_y[idx] += delta;
+    mobs_bb16_north[idx] += delta;
+    mobs_bb16_south[idx] += delta;
+}
+
 uint8_t alloc_mob(void) {
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
         if (!mob_check_flag(i, IN_USE)) {
@@ -272,6 +300,7 @@ uint8_t alloc_mob(void) {
 
             mobs_speed_counter[i] = 1;
             mobs_last_update_frame[i] = frame_count;
+            mob_calc_bb16(i);
             return i;
         }
     }
@@ -485,8 +514,8 @@ void update_mobs(void) {
             int8_t move_y = mobs_damage_push_y[i];
 
             if (check_mob_move(i, move_x, move_y)) {
-                mobs_map_x[i] += move_x;
-                mobs_map_y[i] += move_y;
+                mob_inc_x(i, move_x);
+                mob_inc_y(i, move_y);
             }
         } else {
             if (mobs_speed_pixels[i] &&
@@ -496,15 +525,15 @@ void update_mobs(void) {
                 if (mobs_speed_counter[i] == 0) {
                     mobs_speed_counter[i] = mobs_speed_frames[i];
                     if (mobs_map_x[i] < mobs_target_map_x[i]) {
-                        mobs_map_x[i]++;
+                        mob_inc_x(i, 1);
                     } else if (mobs_map_x[i] > mobs_target_map_x[i]) {
-                        mobs_map_x[i]--;
+                        mob_inc_x(i, -1);
                     }
 
                     if (mobs_map_y[i] < mobs_target_map_y[i]) {
-                        mobs_map_y[i]++;
+                        mob_inc_y(i, 1);
                     } else if (mobs_map_y[i] > mobs_target_map_y[i]) {
-                        mobs_map_y[i]--;
+                        mob_inc_y(i, -1);
                     }
 
                     if (mobs_map_x[i] == mobs_target_map_x[i] &&
@@ -571,14 +600,10 @@ bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
             return false;
         }
 
-        struct bb16 mob_bb16 = {
-            mob_get_y(idx) + mobs_bb_north[idx],
-            mob_get_y(idx) + mobs_bb_south[idx],
-            mob_get_x(idx) + mobs_bb_east[idx],
-            mob_get_x(idx) + mobs_bb_west[idx],
-        };
-
-        return bb16_intersect(&mob_bb16, &bb);
+        return (mobs_bb16_north[idx] <= bb.south &&
+                bb.north <= mobs_bb16_south[idx] &&
+                mobs_bb16_west[idx] <= bb.east &&
+                bb.west <= mobs_bb16_east[idx]);
     }
     return false;
 }
