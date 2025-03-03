@@ -565,7 +565,7 @@ void update_mobs(void) {
         }
 
         mob_update_idx++;
-        if (mob_update_idx > MAX_MOBS) {
+        if (mob_update_idx >= MAX_MOBS) {
             mob_update_idx = 0;
         }
     }
