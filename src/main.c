@@ -370,11 +370,6 @@ void game_loop(void) {
     memset(health_string_buf, ' ', sizeof(health_string_buf) - 1);
     health_string_buf[sizeof(health_string_buf) - 1] = '\0';
 
-#ifdef DEBUG
-    bool draw_debug = false;
-    char frame_debug_buf[] = "    #####";
-#endif
-
     score = 0;
     score_updated = true;
     player_health_changed = true;
@@ -393,9 +388,11 @@ void game_loop(void) {
 
 #ifdef DEBUG
     uint16_t worst_raster_wait = 0xFFFF;
-    uint16_t raster_sum = 0;
+    uint16_t raster_avg = 0;
+    char raster_avg_str[] = "    0X####";
+    bool draw_raster_avg = false;
 
-    fill_color(SCORE_TEXT_X - sizeof(score_string_buf), SCORE_TEXT_Y + 1,
+    fill_color(SCORE_TEXT_X - sizeof(raster_avg_str), SCORE_TEXT_Y + 1,
                SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
 #endif
 
@@ -409,7 +406,7 @@ void game_loop(void) {
         frame_wait();
 #ifdef DEBUG
         uint16_t raster_wait_end = get_raster();
-        // There is a change that we read the raster register right as it rolls
+        // There is a chance that we read the raster register right as it rolls
         // over. If so, it will be zero. Rather than deal with this, ignore
         // zeros
         if (raster_wait_start && raster_wait_end) {
@@ -417,7 +414,7 @@ void game_loop(void) {
             if (elapsed < worst_raster_wait) {
                 worst_raster_wait = elapsed;
             }
-            raster_sum += elapsed;
+            raster_avg = (raster_avg + elapsed) >> 1;
         }
 #endif
 
@@ -432,18 +429,17 @@ void game_loop(void) {
             put_string_xy(SCORE_TEXT_X - fast_strlen(score_string_buf),
                           SCORE_TEXT_Y, score_string_buf);
             draw_score = false;
-        } else
-#ifdef DEBUG
-            if (draw_debug) {
-            put_string_xy(SCORE_TEXT_X - (sizeof(frame_debug_buf) - 1),
-                          SCORE_TEXT_Y + 1, frame_debug_buf);
-            draw_debug = false;
-        } else
-#endif
-            if (draw_health) {
+        } else if (draw_health) {
             put_string_xy(HEALTH_X_TILE, HEALTH_Y_TILE, health_string_buf);
             draw_health = false;
         }
+#ifdef DEBUG
+        else if (draw_raster_avg) {
+            put_string_xy(SCORE_TEXT_X - fast_strlen(raster_avg_str),
+                          SCORE_TEXT_Y + 1, raster_avg_str);
+            draw_raster_avg = false;
+        }
+#endif
 
         DEBUG_COLOR(COLOR_RED);
         draw_player();
@@ -469,7 +465,8 @@ void game_loop(void) {
 
 #ifdef DEBUG
         if ((frame_count & 0x3F) == 0) {
-            raster_sum = raster_sum >> 6;
+            u16_to_string(raster_avg, &raster_avg_str[6]);
+            draw_raster_avg = true;
         } else
 #endif
             if (player_health_changed) {
@@ -491,9 +488,8 @@ void game_loop(void) {
             draw_score = true;
 
         } else if (player_coins_changed) {
-            pad_string(
-                &coin_string_buf[1], sizeof(coin_string_buf) - 1,
-                u16_to_string(player_get_coins(), &coin_string_buf[1]));
+            pad_string(&coin_string_buf[1], sizeof(coin_string_buf) - 1,
+                       u16_to_string(player_get_coins(), &coin_string_buf[1]));
 
             player_coins_changed = false;
             draw_coins = true;
