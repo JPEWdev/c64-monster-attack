@@ -322,7 +322,7 @@ void destroy_all_mobs(void) {
     }
 }
 
-static uint8_t animate_mob(uint8_t idx) {
+static void animate_mob(uint8_t idx) {
     if (mobs_animation_count[idx] == 0) {
         mobs_sprite_frame[idx]++;
         mobs_animation_count[idx] = mobs_animation_rate[idx];
@@ -333,8 +333,6 @@ static uint8_t animate_mob(uint8_t idx) {
     if (mobs_sprite_frame[idx] >= mobs_sprite[idx]->num_frames) {
         mobs_sprite_frame[idx] = 0;
     }
-
-    return mobs_sprite_frame[idx];
 }
 
 void draw_mobs(void) {
@@ -370,7 +368,7 @@ void draw_mobs(void) {
             VICII_SPRITE_COLOR[sprite_idx] = mobs_color[mob_idx];
         }
 
-        uint8_t frame = animate_mob(mob_idx);
+        uint8_t frame = mobs_sprite_frame[mob_idx];
 
         sprite_pointers_shadow[sprite_idx] =
             mobs_sprite[mob_idx]->pointers[frame];
@@ -414,7 +412,8 @@ void draw_mobs(void) {
         uint8_t color = (mobs_damage_counter[mob_idx] & 1)
                             ? mobs_damage_color[mob_idx]
                             : mobs_color[mob_idx];
-        uint8_t frame = animate_mob(mob_idx);
+
+        uint8_t frame = mobs_sprite_frame[mob_idx];
 
         if (mob_get_x(mob_idx) & 0x0100) {
             sprite_msb |= mask;
@@ -553,6 +552,8 @@ void update_mobs(void) {
             }
             mob_clr_flag(i, REACHED_TARGET);
         }
+
+        animate_mob(i);
     }
 
     if (!called_reached_target) {

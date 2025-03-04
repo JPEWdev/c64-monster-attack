@@ -41,9 +41,6 @@ uint8_t sword_state;
 uint16_t sword_x = 0;
 uint16_t sword_y = 0;
 
-// static enum direction player_sprite_dir = SOUTH;
-static bool player_moving = false;
-
 static const struct {
     int8_t x;
     int8_t y;
@@ -147,17 +144,6 @@ void draw_player(void) {
     }
     {
 #endif
-        if (sword_animation_counter == 0) {
-            sword_frame++;
-            sword_animation_counter = SWORD_ANIMATION_RATE;
-        } else {
-            sword_animation_counter = 0;
-        }
-
-        if (sword_frame && sword_frame >= sword_sprite.num_frames[player_dir]) {
-            sword_frame = 0;
-        }
-
         uint8_t flags = sword_sprite.flags[player_dir][sword_frame];
 
         if (flags & SPRITE_IMAGE_EXPAND_X) {
@@ -184,19 +170,6 @@ void draw_player(void) {
     struct direction_sprite const* sprite =
         (sword_state == SWORD_VISIBLE) ? &player_attack_sprite : &player_sprite;
     {
-        if (player_moving) {
-            if (player_animation_counter == 0) {
-                player_frame++;
-                player_animation_counter = PLAYER_ANIMATION_RATE;
-            } else {
-                player_animation_counter--;
-            }
-        }
-
-        if (player_frame && player_frame >= sprite->num_frames[player_dir]) {
-            player_frame = 0;
-        }
-
         sprite_enable |= _BV(PLAYER_SPRITE_IDX);
         uint8_t flags = sprite->flags[player_dir][player_frame];
 
@@ -250,8 +223,6 @@ void draw_player(void) {
     VICII_SPRITE_Y_EXPAND = sprite_y_expand;
     VICII_SPRITE_X_EXPAND = sprite_x_expand;
     VICII_SPRITE_MULTICOLOR = sprite_multicolor;
-
-    player_moving = false;
 }
 
 void update_player(void) {
@@ -350,8 +321,32 @@ void update_player(void) {
     check_move(player_map_x, player_map_y, &move_delta_x, &move_delta_y);
 
     if (move_delta_x || move_delta_y) {
-        player_moving = true;
+        if (player_animation_counter == 0) {
+            player_frame++;
+            player_animation_counter = PLAYER_ANIMATION_RATE;
+        } else {
+            player_animation_counter--;
+        }
     }
+
+    struct direction_sprite const* sprite =
+        (sword_state == SWORD_VISIBLE) ? &player_attack_sprite : &player_sprite;
+
+    if (player_frame && player_frame >= sprite->num_frames[player_dir]) {
+        player_frame = 0;
+    }
+
+    if (sword_animation_counter == 0) {
+        sword_frame++;
+        sword_animation_counter = SWORD_ANIMATION_RATE;
+    } else {
+        sword_animation_counter = 0;
+    }
+
+    if (sword_frame && sword_frame >= sword_sprite.num_frames[player_dir]) {
+        sword_frame = 0;
+    }
+
 
     player_map_x += move_delta_x;
     player_map_y += move_delta_y;
