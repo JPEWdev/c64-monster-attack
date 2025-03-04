@@ -379,7 +379,6 @@ void game_loop(void) {
                SCORE_TEXT_X - 1, SCORE_TEXT_Y, COLOR_WHITE);
 
 #ifdef DEBUG
-    uint16_t worst_raster_wait = 0xFFFF;
     uint16_t raster_avg = 0;
     char raster_avg_str[] = "    0X####";
     bool draw_raster_avg = false;
@@ -405,9 +404,6 @@ void game_loop(void) {
         // zeros
         if (raster_wait_start && raster_wait_end) {
             uint16_t elapsed = raster_wait_end - raster_wait_start;
-            if (elapsed < worst_raster_wait) {
-                worst_raster_wait = elapsed;
-            }
             raster_avg = (raster_avg + elapsed) >> 1;
         }
 #endif
@@ -497,12 +493,6 @@ void game_loop(void) {
             player_coins_changed = false;
             draw_coins = true;
         }
-
-#ifdef DEBUG
-        if (tick_count == 0) {
-            worst_raster_wait = 0xFFFF;
-        }
-#endif
 
         if (player_health <= 0 && !player_temp_invulnerable) {
             break;
