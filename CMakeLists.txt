@@ -22,7 +22,7 @@ endif()
 
 option(DEBUG_MODE "Enable visual debug mode" OFF)
 
-project(monster-attack VERSION 0.0.2)
+project(monster-attack VERSION 0.0.3)
 enable_language(C ASM)
 set(D64_PROG_NAME "ma")
 
