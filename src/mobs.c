@@ -13,6 +13,7 @@
 #include "player.h"
 #include "reg.h"
 #include "sprite.h"
+#include "tick.h"
 #include "util.h"
 
 #define FRAMES(f) ARRAY_SIZE(f), f
@@ -79,7 +80,7 @@ static mob_action_handler mobs_on_death[MAX_MOBS];
 static mob_action_handler mobs_on_reached_target[MAX_MOBS];
 static mob_update_handler mobs_on_update[MAX_MOBS];
 static uint8_t mobs_speed_counter[MAX_MOBS];
-static uint8_t mobs_last_update_frame[MAX_MOBS];
+static uint8_t mobs_last_update_tick[MAX_MOBS];
 static uint8_t mobs_raster_idx[MAX_MOBS];
 
 static uint8_t mob_idx_by_y[MAX_MOBS];
@@ -300,7 +301,7 @@ uint8_t alloc_mob(void) {
             mobs_on_update[i] = NULL;
 
             mobs_speed_counter[i] = 1;
-            mobs_last_update_frame[i] = frame_count;
+            mobs_last_update_tick[i] = tick_count;
             mob_calc_bb16(i);
             return i;
         }
@@ -564,8 +565,8 @@ void update_mobs(void) {
             mob_check_handler_flag(mob_update_idx, UPDATE)) {
             mobs_on_update[mob_update_idx](
                 mob_update_idx,
-                frame_count - mobs_last_update_frame[mob_update_idx]);
-            mobs_last_update_frame[mob_update_idx] = frame_count;
+                tick_count - mobs_last_update_tick[mob_update_idx]);
+            mobs_last_update_tick[mob_update_idx] = tick_count;
         }
 
         mob_update_idx++;

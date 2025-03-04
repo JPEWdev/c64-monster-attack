@@ -73,6 +73,7 @@ list(APPEND SOURCES
     src/move.c
     src/player.c
     src/util.c
+    src/tick.c
 )
 
 list(APPEND SPRITES

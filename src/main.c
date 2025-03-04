@@ -19,6 +19,7 @@
 #include "player.h"
 #include "reg.h"
 #include "sprite.h"
+#include "tick.h"
 
 // 67 is a bad line so we start right after that
 #define STATUS_INT_LINE (68)
@@ -63,18 +64,6 @@ static const char game_over_text[] = "GAME OVER";
 // SCORE (right justified)
 #define SCORE_TEXT_X (SCREEN_WIDTH_TILE)
 #define SCORE_TEXT_Y (0)
-
-void frame_wait(void) {
-    static uint8_t next_frame = 0;
-    while (*(volatile uint8_t*)&frame_count == next_frame);
-    next_frame = frame_count;
-}
-
-void wait_frames(uint16_t num_frames) {
-    for (; num_frames; num_frames--) {
-        frame_wait();
-    }
-}
 
 static bcd_u16 score = 0;
 static bool score_updated;
@@ -465,6 +454,7 @@ void game_loop(void) {
             delay_frame = 0;
             continue;
         }
+        tick_count++;
 
         // Frame non critical. These can be done during the frame since they
         // don't affect graphics
@@ -477,7 +467,7 @@ void game_loop(void) {
         DEBUG_COLOR(COLOR_ORANGE);
 
 #ifdef DEBUG
-        if ((frame_count & 0x3F) == 0) {
+        if ((tick_count & 0x3F) == 0) {
             u16_to_string(raster_avg, &raster_avg_str[6]);
             draw_raster_avg = true;
         } else
@@ -509,7 +499,7 @@ void game_loop(void) {
         }
 
 #ifdef DEBUG
-        if (frame_count == 0) {
+        if (tick_count == 0) {
             worst_raster_wait = 0xFFFF;
         }
 #endif

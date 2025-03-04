@@ -9,11 +9,13 @@
 
 #define MAX_RASTER_CMDS (4)
 
-extern uint8_t frame_count;
 extern bool last_missed_sprite[MAX_RASTER_CMDS];
 extern uint8_t last_num_missed_sprites;
 
 void isr_handler(void);
+
+void frame_wait(void);
+void wait_frames(uint16_t num_frames);
 
 void prepare_raster_cmds(void);
 void finish_raster_cmds(void);

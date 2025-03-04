@@ -41,6 +41,18 @@ uint8_t last_num_missed_sprites;
 
 static uint8_t first_line;
 
+void frame_wait(void) {
+    static uint8_t next_frame = 0;
+    while (*(volatile uint8_t*)&frame_count == next_frame);
+    next_frame = frame_count;
+}
+
+void wait_frames(uint16_t num_frames) {
+    for (; num_frames; num_frames--) {
+        frame_wait();
+    }
+}
+
 void prepare_raster_cmds(void) {
     raster_cmd_idx = 0xFF;
     for (uint8_t i = 0; i < MAX_RASTER_CMDS; i++) {
