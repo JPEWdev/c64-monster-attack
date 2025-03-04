@@ -113,6 +113,7 @@ static void skeleton_reached_target(uint8_t idx) {
         // Check all 4 directions, starting with a random one, and choose the
         // one that has the shortest distance to the player
         uint8_t best_dist = 0xFF;
+#pragma clang loop unroll(full)
         for (uint8_t i = 0; i < 4; i++) {
             switch ((r + i & 0x3)) {
                 case NORTH:
@@ -172,6 +173,7 @@ static void skeleton_reached_target(uint8_t idx) {
         //
         // Randomly pick a direction. If that quad is passable, move there
         // otherwise check the other directions
+#pragma clang loop unroll(full)
         for (uint8_t i = 0; i < 4; i++) {
             switch ((r + i & 0x3)) {
                 case NORTH:

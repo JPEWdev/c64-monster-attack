@@ -18,6 +18,7 @@
 #define FRAMES(f) ARRAY_SIZE(f), f
 
 #define MOB_SPRITE_OFFSET (2)
+#define NUM_MOB_SPRITES (8 - MOB_SPRITE_OFFSET)
 #define DAMAGE_PUSH (3)
 
 #define MOB_FLAG_IN_USE _BV(0)
@@ -345,18 +346,22 @@ void draw_mobs(void) {
 
     // Initial drawn sprites
     uint8_t sprite_idx = MOB_SPRITE_OFFSET;
+    uint8_t sprite_mask = _BV(MOB_SPRITE_OFFSET);
     uint8_t y_idx = 0;
-    for (; y_idx < MAX_MOBS && sprite_idx < 8; y_idx++, sprite_idx++) {
+
+#pragma clang loop unroll(full)
+    for (y_idx = 0; y_idx < NUM_MOB_SPRITES;
+         y_idx++, sprite_idx++, sprite_mask <<= 1) {
         uint8_t mob_idx = mob_idx_by_y[y_idx];
         if (mobs_bot_y[mob_idx] == 0xFF) {
             // As soon as we see an invalid Y coordinate, we are done.
             break;
         }
 
-        sprite_enable |= setbit(sprite_idx);
+        sprite_enable |= sprite_mask;
 
         if (mob_get_x(mob_idx) & 0x0100) {
-            sprite_msb |= setbit(sprite_idx);
+            sprite_msb |= sprite_mask;
         }
 
         VICII_SPRITE_POSITION[sprite_idx].x = mob_get_x(mob_idx) & 0xFF;
@@ -376,15 +381,15 @@ void draw_mobs(void) {
         uint8_t flags = mobs_sprite[mob_idx]->flags[frame];
 
         if (flags & SPRITE_IMAGE_EXPAND_Y) {
-            sprite_y_expand |= setbit(sprite_idx);
+            sprite_y_expand |= sprite_mask;
         }
 
         if (flags & SPRITE_IMAGE_EXPAND_X) {
-            sprite_x_expand |= setbit(sprite_idx);
+            sprite_x_expand |= sprite_mask;
         }
 
         if (flags & SPRITE_IMAGE_MULTICOLOR) {
-            sprite_multicolor |= setbit(sprite_idx);
+            sprite_multicolor |= sprite_mask;
         }
         mobs_raster_idx[mob_idx] = 0xFF;
     }
@@ -396,18 +401,16 @@ void draw_mobs(void) {
     VICII_SPRITE_MULTICOLOR = sprite_multicolor;
 
     // Multiplexed sprites
-    for (; y_idx < MAX_MOBS; y_idx++, sprite_idx++) {
+    sprite_idx = MOB_SPRITE_OFFSET;
+    sprite_mask = _BV(MOB_SPRITE_OFFSET);
+#pragma clang loop unroll(full)
+    for (y_idx = NUM_MOB_SPRITES; y_idx < MAX_MOBS;
+         y_idx++, sprite_idx++, sprite_mask <<= 1) {
         uint8_t mob_idx = mob_idx_by_y[y_idx];
         if (mobs_bot_y[mob_idx] == 0xFF) {
             // As soon as we see an invalid Y coordinate, we are done.
             break;
         }
-
-        if (sprite_idx >= 8) {
-            sprite_idx = MOB_SPRITE_OFFSET;
-        }
-
-        uint8_t const mask = setbit(sprite_idx);
 
         uint8_t color = (mobs_damage_counter[mob_idx] & 1)
                             ? mobs_damage_color[mob_idx]
@@ -416,29 +419,29 @@ void draw_mobs(void) {
         uint8_t frame = mobs_sprite_frame[mob_idx];
 
         if (mob_get_x(mob_idx) & 0x0100) {
-            sprite_msb |= mask;
+            sprite_msb |= sprite_mask;
         } else {
-            sprite_msb &= ~mask;
+            sprite_msb &= ~sprite_mask;
         }
 
         uint8_t flags = mobs_sprite[mob_idx]->flags[frame];
 
         if (flags & SPRITE_IMAGE_EXPAND_Y) {
-            sprite_y_expand |= mask;
+            sprite_y_expand |= sprite_mask;
         } else {
-            sprite_y_expand &= ~mask;
+            sprite_y_expand &= ~sprite_mask;
         }
 
         if (flags & SPRITE_IMAGE_EXPAND_X) {
-            sprite_x_expand |= mask;
+            sprite_x_expand |= sprite_mask;
         } else {
-            sprite_x_expand &= ~mask;
+            sprite_x_expand &= ~sprite_mask;
         }
 
         if (flags & SPRITE_IMAGE_MULTICOLOR) {
-            sprite_multicolor |= mask;
+            sprite_multicolor |= sprite_mask;
         } else {
-            sprite_multicolor &= ~mask;
+            sprite_multicolor &= ~sprite_mask;
         }
 
         // Note: +2 is required because the bottom y is the bottom of the

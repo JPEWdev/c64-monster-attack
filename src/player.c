@@ -241,6 +241,7 @@ void update_player(void) {
         struct bb16 const sword_bb16 =
             bb_add_offset(get_sword_bb(), sword_x, sword_y);
 
+#pragma clang loop unroll(full)
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
             if (check_mob_collision(idx, sword_bb16)) {
                 mob_trigger_sword_collision(idx, player_sword_damage);
@@ -252,6 +253,7 @@ void update_player(void) {
     struct bb16 const player_bb16 =
         bb_add_offset(get_player_bb(), player_get_x(), player_get_y());
 
+#pragma clang loop unroll(full)
     for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
         if (check_mob_collision(idx, player_bb16)) {
             mob_trigger_player_collision(idx);
@@ -346,7 +348,6 @@ void update_player(void) {
     if (sword_frame && sword_frame >= sword_sprite.num_frames[player_dir]) {
         sword_frame = 0;
     }
-
 
     player_map_x += move_delta_x;
     player_map_y += move_delta_y;
