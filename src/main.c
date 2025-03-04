@@ -78,6 +78,7 @@ void wait_frames(uint16_t num_frames) {
 
 static bcd_u16 score = 0;
 static bool score_updated;
+static bool is_ntsc;
 
 static uint8_t quad_distance(uint8_t quad_x1, uint8_t quad_y1, uint8_t quad_x2,
                              uint8_t quad_y2) {
@@ -398,6 +399,8 @@ void game_loop(void) {
                SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
 #endif
 
+    uint8_t delay_frame = 0;
+
     while (true) {
         // Wait for next frame interrupt
         DEBUG_COLOR(COLOR_BLACK);
@@ -456,6 +459,12 @@ void game_loop(void) {
         }
 
         update_sprite_pointers();
+
+        delay_frame++;
+        if (is_ntsc && delay_frame >= 5) {
+            delay_frame = 0;
+            continue;
+        }
 
         // Frame non critical. These can be done during the frame since they
         // don't affect graphics
@@ -574,6 +583,8 @@ int main() {
     create_status_raster_cmd();
     create_done_raster_cmd();
     finish_raster_cmds();
+
+    is_ntsc = (detect_video() != VIDEO_PAL_6596);
 
     enable_interrupts();
 

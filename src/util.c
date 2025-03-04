@@ -44,6 +44,35 @@ uint8_t clrbit(uint8_t bit) {
     return 0xFF;
 }
 
+enum video_type detect_video(void) {
+    uint8_t r;
+    __attribute__((leaf)) asm volatile(
+        "1:\n"
+        "   lda $d012\n"
+        "2:\n"
+        "   cmp $d012\n"
+        "   beq 2b\n"
+        "   bmi 1b\n" :
+        // Outputs
+        "+a"(r) :
+        // Inputs
+        :
+        // Clobber
+        "c",
+        "v");
+
+    switch (r) {
+        case 0x37:
+            return VIDEO_PAL_6596;
+        case 0x06:
+            return VIDEO_NTSC_6567R8;
+        case 0x05:
+            return VIDEO_NTSC_6567R65A;
+    }
+
+    return VIDEO_UNKNOWN;
+}
+
 struct bb16 bb_add_offset(struct bb const* bb, uint16_t x, uint16_t y) {
     struct bb16 result;
     result.north = y + bb->north;

@@ -36,6 +36,15 @@ enum direction {
 uint8_t __attribute__((pure)) setbit(uint8_t bit);
 uint8_t __attribute__((pure)) clrbit(uint8_t bit);
 
+enum video_type {
+    VIDEO_PAL_6596,
+    VIDEO_NTSC_6567R8,
+    VIDEO_NTSC_6567R65A,
+    VIDEO_UNKNOWN,
+};
+
+enum video_type detect_video(void);
+
 struct bb {
     uint8_t north;
     uint8_t south;
