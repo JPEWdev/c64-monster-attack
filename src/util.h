@@ -19,7 +19,7 @@
 
 #define swap(a, b)        \
     do {                  \
-        uint8_t temp = a; \
+        typeof(a) temp = a; \
         (a) = (b);        \
         (b) = temp;       \
     } while (0)

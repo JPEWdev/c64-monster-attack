@@ -3,6 +3,7 @@
  */
 #include "draw.h"
 
+#include <cbm.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -151,6 +152,13 @@ void draw_map_quad(uint8_t x, uint8_t y, uint8_t image, uint8_t color) {
 void draw_background(struct map_screen const *screen) {
     VICII_BG_1 = screen->bg_color_1;
     VICII_BG_2 = screen->bg_color_2;
+
+    // Fill any parts of the map area not drawn with black, including the
+    // transition between the status bar and the map
+    fill_char(0, MAP_OFFSET_Y_TILE - 1, SCREEN_WIDTH_TILE - 1,
+              SCREEN_HEIGHT_TILE - 1, FILL_CHAR);
+    fill_color(0, MAP_OFFSET_Y_TILE - 1, SCREEN_WIDTH_TILE - 1,
+               SCREEN_HEIGHT_TILE - 1, COLOR_BLACK);
 
     for (uint8_t y = 0; y < MAP_HEIGHT_QUAD; y++) {
         for (uint8_t x = 0; x < MAP_WIDTH_QUAD; x++) {
