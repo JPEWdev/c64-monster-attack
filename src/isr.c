@@ -32,10 +32,6 @@ uint8_t __zeropage raster_sprite_msb[MAX_RASTER_CMDS];
 uint8_t __zeropage raster_sprite_x_expand[MAX_RASTER_CMDS];
 uint8_t __zeropage raster_sprite_y_expand[MAX_RASTER_CMDS];
 uint8_t __zeropage raster_sprite_multicolor[MAX_RASTER_CMDS];
-bool missed_sprite[MAX_RASTER_CMDS] = {
-    false,
-};
-bool last_missed_sprite[MAX_RASTER_CMDS];
 uint8_t num_missed_sprites;
 uint8_t last_num_missed_sprites;
 
@@ -55,10 +51,6 @@ void wait_frames(uint16_t num_frames) {
 
 void prepare_raster_cmds(void) {
     raster_cmd_idx = 0xFF;
-    for (uint8_t i = 0; i < MAX_RASTER_CMDS; i++) {
-        last_missed_sprite[i] = missed_sprite[i];
-        missed_sprite[i] = false;
-    }
     last_num_missed_sprites = num_missed_sprites;
     num_missed_sprites = 0;
 }

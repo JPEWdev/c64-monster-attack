@@ -9,7 +9,6 @@
 
 #define MAX_RASTER_CMDS (4)
 
-extern bool last_missed_sprite[MAX_RASTER_CMDS];
 extern uint8_t last_num_missed_sprites;
 
 void isr_handler(void);

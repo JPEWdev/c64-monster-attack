@@ -81,7 +81,6 @@ static mob_action_handler mobs_on_reached_target[MAX_MOBS];
 static mob_update_handler mobs_on_update[MAX_MOBS];
 static uint8_t mobs_speed_counter[MAX_MOBS];
 static uint8_t mobs_last_update_tick[MAX_MOBS];
-static uint8_t mobs_raster_idx[MAX_MOBS];
 
 static uint8_t mob_idx_by_y[MAX_MOBS];
 
@@ -392,7 +391,6 @@ void draw_mobs(void) {
         if (flags & SPRITE_IMAGE_MULTICOLOR) {
             sprite_multicolor |= sprite_mask;
         }
-        mobs_raster_idx[mob_idx] = 0xFF;
     }
 
     VICII_SPRITE_ENABLE = sprite_enable;
@@ -448,14 +446,13 @@ void draw_mobs(void) {
         // Note: +2 is required because the bottom y is the bottom of the
         // bounding box (not the distance from the y coordinate), and the
         // raster interrupt is triggered at the start of the raster line
-        mobs_raster_idx[mob_idx] = alloc_raster_cmd(
+        uint8_t raster_idx = alloc_raster_cmd(
             mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]] + 2);
 
-        raster_set_sprite(mobs_raster_idx[mob_idx], sprite_idx,
-                          mobs_sprite[mob_idx]->pointers[frame],
-                          mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color,
-                          sprite_msb, sprite_x_expand, sprite_y_expand,
-                          sprite_multicolor);
+        raster_set_sprite(
+            raster_idx, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],
+            mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color, sprite_msb,
+            sprite_x_expand, sprite_y_expand, sprite_multicolor);
     }
 }
 
@@ -600,11 +597,6 @@ void update_mobs(void) {
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
     if (mob_check_flag(idx, IN_USE)) {
-        if (mobs_raster_idx[idx] != 0xFF &&
-            last_missed_sprite[mobs_raster_idx[idx]]) {
-            return false;
-        }
-
         return (mobs_bb16_north[idx] <= bb.south &&
                 bb.north <= mobs_bb16_south[idx] &&
                 mobs_bb16_west[idx] <= bb.east &&
