@@ -522,15 +522,35 @@ void update_mobs(void) {
                 if (mobs_speed_counter[i] == 0) {
                     mobs_speed_counter[i] = mobs_speed_frames[i];
                     if (mobs_map_x[i] < mobs_target_map_x[i]) {
-                        mob_inc_x(i, 1);
+                        uint16_t delta = mobs_target_map_x[i] - mobs_map_x[i];
+                        if (delta < mobs_speed_pixels[i]) {
+                            mob_inc_x(i, delta);
+                        } else {
+                            mob_inc_x(i, mobs_speed_pixels[i]);
+                        }
                     } else if (mobs_map_x[i] > mobs_target_map_x[i]) {
-                        mob_inc_x(i, -1);
+                        uint16_t delta = mobs_map_x[i] - mobs_target_map_x[i];
+                        if (delta < mobs_speed_pixels[i]) {
+                            mob_inc_x(i, -delta);
+                        } else {
+                            mob_inc_x(i, -mobs_speed_pixels[i]);
+                        }
                     }
 
                     if (mobs_map_y[i] < mobs_target_map_y[i]) {
-                        mob_inc_y(i, 1);
+                        uint8_t delta = mobs_target_map_y[i] - mobs_map_y[i];
+                        if (delta < mobs_speed_pixels[i]) {
+                            mob_inc_y(i, delta);
+                        } else {
+                            mob_inc_y(i, mobs_speed_pixels[i]);
+                        }
                     } else if (mobs_map_y[i] > mobs_target_map_y[i]) {
-                        mob_inc_y(i, -1);
+                        uint8_t delta = mobs_target_map_y[i] - mobs_map_y[i];
+                        if (delta < mobs_speed_pixels[i]) {
+                            mob_inc_y(i, -delta);
+                        } else {
+                            mob_inc_y(i, -mobs_speed_pixels[i]);
+                        }
                     }
 
                     if (mobs_map_x[i] == mobs_target_map_x[i] &&
