@@ -606,6 +606,9 @@ void update_mobs(void) {
     //
     // This isn't a 100% ideal solution, but it is a fast calculation
     for (uint8_t i = 0; i < last_num_missed_sprites; i++) {
+        if (i + last_num_missed_sprites >= MAX_MOBS) {
+            break;
+        }
         mobs_bot_y[mob_idx_by_y[i + last_num_missed_sprites]] = 0xFF;
     }
 
