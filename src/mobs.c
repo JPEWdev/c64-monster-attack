@@ -93,7 +93,7 @@ void init_mobs(void) {
 
 static void set_bot_y(uint8_t idx) {
     if (mob_check_flag(idx, HAS_SPRITE)) {
-        mobs_bot_y[idx] = mob_get_y(idx) + mobs_bb_south[idx];
+        mobs_bot_y[idx] = mob_get_y(idx) + SPRITE_HEIGHT_PX;
     } else {
         mobs_bot_y[idx] = 0xFF;
     }
@@ -443,11 +443,8 @@ void draw_mobs(void) {
             sprite_multicolor &= ~sprite_mask;
         }
 
-        // Note: +2 is required because the bottom y is the bottom of the
-        // bounding box (not the distance from the y coordinate), and the
-        // raster interrupt is triggered at the start of the raster line
         uint8_t raster_idx = alloc_raster_cmd(
-            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]] + 2);
+            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
 
         raster_set_sprite(
             raster_idx, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],
