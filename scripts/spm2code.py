@@ -117,7 +117,7 @@ def main():
                         byte = 0
                         for i in range(0, 8):
                             check_bb(row[p + i], row_idx, p + i)
-                            byte |= row[p + i] << i
+                            byte = (byte << 1) | row[p + i];
 
                         pixel_data.append(byte)
             frame_name = f"{name}_{sprite_idx}"
