@@ -353,13 +353,13 @@ void draw_mobs(void) {
         VICII_SPRITE_MULTICOLOR & _BMASK(MOB_SPRITE_OFFSET);
 
     // Initial drawn sprites
-    uint8_t sprite_idx = MOB_SPRITE_OFFSET;
-    uint8_t sprite_mask = _BV(MOB_SPRITE_OFFSET);
+    uint8_t sprite_idx = 7;
+    uint8_t sprite_mask = _BV(7);
     uint8_t y_idx = 0;
 
 #pragma clang loop unroll(full)
     for (y_idx = 0; y_idx < NUM_MOB_SPRITES;
-         y_idx++, sprite_idx++, sprite_mask <<= 1) {
+         y_idx++, sprite_idx--, sprite_mask >>= 1) {
         uint8_t mob_idx = mob_idx_by_y[y_idx];
         if (mobs_bot_y[mob_idx] == 0xFF) {
             // As soon as we see an invalid Y coordinate, we are done.
@@ -408,11 +408,11 @@ void draw_mobs(void) {
     VICII_SPRITE_MULTICOLOR = sprite_multicolor;
 
     // Multiplexed sprites
-    sprite_idx = MOB_SPRITE_OFFSET;
-    sprite_mask = _BV(MOB_SPRITE_OFFSET);
+    sprite_idx = 7;
+    sprite_mask = _BV(7);
 #pragma clang loop unroll(full)
     for (y_idx = NUM_MOB_SPRITES; y_idx < MAX_MOBS;
-         y_idx++, sprite_idx++, sprite_mask <<= 1) {
+         y_idx++, sprite_idx--, sprite_mask >>= 1) {
         uint8_t mob_idx = mob_idx_by_y[y_idx];
         if (mobs_bot_y[mob_idx] == 0xFF) {
             // As soon as we see an invalid Y coordinate, we are done.
