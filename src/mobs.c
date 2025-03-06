@@ -189,6 +189,10 @@ void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_target_map_y[idx] = map_y;
 }
 
+uint8_t mob_has_sword_collision(uint8_t idx) {
+    return mob_check_handler_flag(idx, SWORD_COLLISION);
+}
+
 void mob_set_sword_collision_handler(uint8_t idx,
                                      mob_sword_collision_handler handler) {
     mobs_on_sword_collision[idx] = handler;
@@ -203,6 +207,10 @@ void mob_trigger_sword_collision(uint8_t idx, uint8_t damage) {
     if (mob_check_handler_flag(idx, SWORD_COLLISION)) {
         mobs_on_sword_collision[idx](idx, damage);
     }
+}
+
+uint8_t mob_has_player_collision(uint8_t idx) {
+    return mob_check_handler_flag(idx, PLAYER_COLLISION);
 }
 
 void mob_set_player_collision_handler(uint8_t idx, mob_action_handler handler) {

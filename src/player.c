@@ -243,7 +243,8 @@ void update_player(void) {
 
 #pragma clang loop unroll(full)
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
-            if (check_mob_collision(idx, sword_bb16)) {
+            if (mob_has_sword_collision(idx) &&
+                check_mob_collision(idx, sword_bb16)) {
                 mob_trigger_sword_collision(idx, player_sword_damage);
                 sword_state = SWORD_ATTACKED;
             }
@@ -255,7 +256,8 @@ void update_player(void) {
 
 #pragma clang loop unroll(full)
     for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
-        if (check_mob_collision(idx, player_bb16)) {
+        if (mob_has_player_collision(idx) &&
+            check_mob_collision(idx, player_bb16)) {
             mob_trigger_player_collision(idx);
         }
     }

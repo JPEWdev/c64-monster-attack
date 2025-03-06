@@ -32,9 +32,11 @@ void mob_set_color(uint8_t idx, uint8_t color);
 void mob_set_damage_color(uint8_t idx, uint8_t color);
 void mob_set_speed(uint8_t idx, uint8_t speed_pixels, uint8_t speed_frames);
 void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y);
+uint8_t mob_has_sword_collision(uint8_t idx);
 void mob_set_sword_collision_handler(uint8_t idx,
                                      mob_sword_collision_handler handler);
 void mob_trigger_sword_collision(uint8_t idx, uint8_t damage);
+uint8_t mob_has_player_collision(uint8_t idx);
 void mob_set_player_collision_handler(uint8_t idx, mob_action_handler handler);
 void mob_trigger_player_collision(uint8_t idx);
 void mob_set_death_handler(uint8_t idx, mob_action_handler handler);
