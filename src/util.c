@@ -46,20 +46,13 @@ uint8_t clrbit(uint8_t bit) {
 
 enum video_type detect_video(void) {
     uint8_t r;
-    __attribute__((leaf)) asm volatile(
-        "1:\n"
-        "   lda $d012\n"
-        "2:\n"
-        "   cmp $d012\n"
-        "   beq 2b\n"
-        "   bmi 1b\n" :
-        // Outputs
-        "+a"(r) :
-        // Inputs
-        :
-        // Clobber
-        "c",
-        "v");
+    int8_t d;
+    do {
+        r = VICII_RASTER;
+        do {
+            d = r - VICII_RASTER;
+        } while (d == 0);
+    } while (d < 0);
 
     switch (r) {
         case 0x37:
