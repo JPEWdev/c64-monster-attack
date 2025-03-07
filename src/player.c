@@ -225,7 +225,7 @@ void draw_player(void) {
     VICII_SPRITE_MULTICOLOR = sprite_multicolor;
 }
 
-void update_player(void) {
+void tick_player(void) {
     if (player_temp_invulnerable) {
         player_temp_invulnerable--;
     }

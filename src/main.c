@@ -520,16 +520,68 @@ static void pad_string(char* str, uint8_t size, uint8_t offset) {
     str[size - 1] = '\0';
 }
 
+static bool draw_coins = false;
+static char coin_string_buf[] = "$####";
+static bool update_coin_string(void) {
+    if (!player_coins_changed) {
+        return false;
+    }
+    pad_string(&coin_string_buf[1], sizeof(coin_string_buf) - 1,
+               u16_to_string(player_get_coins(), &coin_string_buf[1]));
+
+    player_coins_changed = false;
+    draw_coins = true;
+    return true;
+}
+
+static bool draw_score = false;
+static char score_string_buf[] = "    SCORE ####";
+static bool update_score_string(void) {
+    if (!score_updated) {
+        return false;
+    }
+    u16_to_string(score, &score_string_buf[10]);
+    score_updated = false;
+    draw_score = true;
+    return true;
+}
+
+static bool draw_health = false;
+static char health_string_buf[(PLAYER_MAX_HEALTH / 2) + 1];
+static bool update_health_string(void) {
+    if (!player_health_changed) {
+        return false;
+    }
+    for (uint8_t i = 0; i < PLAYER_MAX_HEALTH; i += 2) {
+        if (player_health <= i) {
+            health_string_buf[i / 2] = ' ';
+        } else if (player_health == i + 1) {
+            health_string_buf[i / 2] = HALF_HEART_CHAR;
+        } else {
+            health_string_buf[i / 2] = HEART_CHAR;
+        }
+    }
+    player_health_changed = false;
+    draw_health = true;
+    return true;
+}
+
+#ifdef DEBUG
+static char raster_avg_str[] = "    0X####";
+static bool draw_raster_avg = false;
+static bool update_raster_avg_string(uint16_t raster_avg, bool update) {
+    if (update) {
+        u16_to_string(raster_avg, &raster_avg_str[6]);
+        draw_raster_avg = true;
+        return true;
+    }
+    return false;
+}
+#else
+#define update_raster_avg_string(avg, update) (false)
+#endif
+
 void game_loop(void) {
-    bool draw_coins = false;
-    char coin_string_buf[] = "$####";
-
-    bool draw_score = false;
-    char score_string_buf[] = "    SCORE ####";
-
-    bool draw_health = false;
-    char health_string_buf[(PLAYER_MAX_HEALTH / 2) + 1];
-
     memset(health_string_buf, ' ', sizeof(health_string_buf) - 1);
     health_string_buf[sizeof(health_string_buf) - 1] = '\0';
 
@@ -551,9 +603,6 @@ void game_loop(void) {
 
 #ifdef DEBUG
     uint16_t raster_avg = 0;
-    char raster_avg_str[] = "    0X####";
-    bool draw_raster_avg = false;
-
     fill_color(SCORE_TEXT_X - sizeof(raster_avg_str), SCORE_TEXT_Y + 1,
                SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
 #endif
@@ -570,9 +619,9 @@ void game_loop(void) {
         frame_wait();
 #ifdef DEBUG
         uint16_t raster_wait_end = get_raster();
-        // There is a chance that we read the raster register right as it rolls
-        // over. If so, it will be zero. Rather than deal with this, ignore
-        // zeros
+        // There is a chance that we read the raster register right as it
+        // rolls over. If so, it will be zero. Rather than deal with this,
+        // ignore zeros
         if (raster_wait_start && raster_wait_end) {
             uint16_t elapsed = raster_wait_end - raster_wait_start;
             raster_avg = (raster_avg + elapsed) >> 1;
@@ -616,54 +665,45 @@ void game_loop(void) {
 
         update_sprite_pointers();
 
+        // Frame non critical. These can be done during the frame since they
+        // don't affect graphics
+
+        // String updates. On NTSC, only update strings on "dead" frames where
+        // the normal update tick is skipped to keep timing consistent with
+        // PAL.
+        //
+        // On PAL, the strings are checked every frame, but only one of the
+        // pending changes is performed, and the others will wait for a
+        // subsequent frame
+        DEBUG_COLOR(COLOR_ORANGE);
         delay_frame++;
-        if (is_ntsc && delay_frame >= 5) {
-            delay_frame = 0;
-            continue;
+        if (is_ntsc) {
+            if (delay_frame >= 5) {
+                delay_frame = 0;
+                update_raster_avg_string(raster_avg, (frame_count & 0x3F) == 0);
+                update_health_string();
+                update_coin_string();
+                update_score_string();
+
+                // Update all MOBS to catch up if processing of callbacks is
+                // behind
+                for (uint8_t i = 0; i < MAX_MOBS; i++) {
+                    update_mobs();
+                }
+                continue;
+            }
+        } else {
+            update_raster_avg_string(raster_avg, (tick_count & 0x3F) == 0) ||
+                update_health_string() || update_coin_string() ||
+                update_score_string();
         }
         tick_count++;
 
-        // Frame non critical. These can be done during the frame since they
-        // don't affect graphics
         DEBUG_COLOR(COLOR_GREEN);
-        update_player();
+        tick_player();
 
         DEBUG_COLOR(COLOR_PURPLE);
-        update_mobs();
-
-        DEBUG_COLOR(COLOR_ORANGE);
-
-#ifdef DEBUG
-        if ((tick_count & 0x3F) == 0) {
-            u16_to_string(raster_avg, &raster_avg_str[6]);
-            draw_raster_avg = true;
-        } else
-#endif
-            if (player_health_changed) {
-
-            for (uint8_t i = 0; i < PLAYER_MAX_HEALTH; i += 2) {
-                if (player_health <= i) {
-                    health_string_buf[i / 2] = ' ';
-                } else if (player_health == i + 1) {
-                    health_string_buf[i / 2] = HALF_HEART_CHAR;
-                } else {
-                    health_string_buf[i / 2] = HEART_CHAR;
-                }
-            }
-            player_health_changed = false;
-            draw_health = true;
-        } else if (score_updated) {
-            u16_to_string(score, &score_string_buf[10]);
-            score_updated = false;
-            draw_score = true;
-
-        } else if (player_coins_changed) {
-            pad_string(&coin_string_buf[1], sizeof(coin_string_buf) - 1,
-                       u16_to_string(player_get_coins(), &coin_string_buf[1]));
-
-            player_coins_changed = false;
-            draw_coins = true;
-        }
+        tick_mobs();
 
         if (player_health <= 0 && !player_temp_invulnerable) {
             break;

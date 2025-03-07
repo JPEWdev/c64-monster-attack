@@ -48,6 +48,7 @@ uint8_t alloc_mob(void);
 void destroy_mob(uint8_t idx);
 void destroy_all_mobs(void);
 void draw_mobs(void);
+void tick_mobs(void);
 void update_mobs(void);
 void capture_mob_collisions(void);
 void damage_mob(uint8_t idx, uint8_t damage);

@@ -53,7 +53,7 @@ bool damage_player(uint8_t damage);
 void damage_player_push(uint8_t damage, int8_t push_x, int8_t push_y);
 void heal_player(uint8_t health);
 void draw_player(void);
-void update_player(void);
+void tick_player(void);
 
 struct bb const* get_player_bb(void);
 struct bb const* get_sword_bb(void);

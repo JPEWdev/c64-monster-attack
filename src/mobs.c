@@ -510,7 +510,7 @@ static bool check_mob_move(uint8_t idx, int8_t move_x, int8_t move_y) {
     return map_tile_is_passable(new_quad_x, new_quad_y);
 }
 
-void update_mobs(void) {
+void tick_mobs(void) {
     bool called_reached_target = false;
 
     for (uint8_t i = 0; i < MAX_MOBS; i++) {
@@ -596,18 +596,7 @@ void update_mobs(void) {
     }
 
     if (!called_reached_target) {
-        if (mob_check_flag(mob_update_idx, IN_USE) &&
-            mob_check_handler_flag(mob_update_idx, UPDATE)) {
-            mobs_on_update[mob_update_idx](
-                mob_update_idx,
-                tick_count - mobs_last_update_tick[mob_update_idx]);
-            mobs_last_update_tick[mob_update_idx] = tick_count;
-        }
-
-        mob_update_idx++;
-        if (mob_update_idx >= MAX_MOBS) {
-            mob_update_idx = 0;
-        }
+        update_mobs();
     }
 
     // If not all MOBs were drawn, set some mobs with lower Y values (those
@@ -634,6 +623,20 @@ void update_mobs(void) {
     }
 
     sort_mobs_y();
+}
+
+void update_mobs(void) {
+    if (mob_check_flag(mob_update_idx, IN_USE) &&
+        mob_check_handler_flag(mob_update_idx, UPDATE)) {
+        mobs_on_update[mob_update_idx](
+            mob_update_idx, tick_count - mobs_last_update_tick[mob_update_idx]);
+        mobs_last_update_tick[mob_update_idx] = tick_count;
+    }
+
+    mob_update_idx++;
+    if (mob_update_idx >= MAX_MOBS) {
+        mob_update_idx = 0;
+    }
 }
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
