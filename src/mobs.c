@@ -106,6 +106,21 @@ static void mob_calc_bb16(uint8_t idx) {
     mobs_bb16_east[idx] = mob_get_x(idx) + mobs_bb_east[idx];
 }
 
+static uint8_t map_y_to_sprite_y(uint8_t map_y) {
+    return map_y + MAP_OFFSET_Y_PX - SPRITE_HEIGHT_PX / 2;
+}
+
+static uint8_t sprite_y_to_map_y(uint8_t y) {
+    return y + SPRITE_HEIGHT_PX / 2 - MAP_OFFSET_Y_PX;
+}
+
+static uint8_t clamp_map_y(uint8_t map_y) {
+    if (map_y >= sprite_y_to_map_y(255 - SPRITE_HEIGHT_PX)) {
+        return sprite_y_to_map_y(255 - (SPRITE_HEIGHT_PX + 1));
+    }
+    return map_y;
+}
+
 // Ocean sort method
 static void sort_mobs_y(void) {
     for (uint8_t i = 0; i < MAX_MOBS - 1; i++) {
@@ -150,7 +165,7 @@ void mob_set_bb(uint8_t idx, struct bb bb) {
 
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_map_x[idx] = map_x;
-    mobs_map_y[idx] = map_y;
+    mobs_map_y[idx] = clamp_map_y(map_y);
     set_bot_y(idx);
     mob_calc_bb16(idx);
 }
@@ -159,9 +174,7 @@ uint16_t mob_get_x(uint8_t idx) {
     return mobs_map_x[idx] + MAP_OFFSET_X_PX - SPRITE_WIDTH_PX / 2;
 }
 
-uint16_t mob_get_y(uint8_t idx) {
-    return mobs_map_y[idx] + MAP_OFFSET_Y_PX - SPRITE_HEIGHT_PX / 2;
-}
+uint16_t mob_get_y(uint8_t idx) { return map_y_to_sprite_y(mobs_map_y[idx]); }
 
 uint16_t mob_get_map_x(uint8_t idx) { return mobs_map_x[idx]; }
 
@@ -186,7 +199,7 @@ void mob_set_speed(uint8_t idx, uint8_t speed_pixels, uint8_t speed_frames) {
 
 void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_target_map_x[idx] = map_x;
-    mobs_target_map_y[idx] = map_y;
+    mobs_target_map_y[idx] = clamp_map_y(map_y);
 }
 
 uint8_t mob_has_sword_collision(uint8_t idx) {
