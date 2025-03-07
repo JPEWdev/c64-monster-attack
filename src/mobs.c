@@ -174,7 +174,7 @@ uint16_t mob_get_x(uint8_t idx) {
     return mobs_map_x[idx] + MAP_OFFSET_X_PX - SPRITE_WIDTH_PX / 2;
 }
 
-uint16_t mob_get_y(uint8_t idx) { return map_y_to_sprite_y(mobs_map_y[idx]); }
+uint8_t mob_get_y(uint8_t idx) { return map_y_to_sprite_y(mobs_map_y[idx]); }
 
 uint16_t mob_get_map_x(uint8_t idx) { return mobs_map_x[idx]; }
 
@@ -464,8 +464,8 @@ void draw_mobs(void) {
             sprite_multicolor &= ~sprite_mask;
         }
 
-        uint8_t raster_idx = alloc_raster_cmd(
-            mobs_bot_y[mob_idx_by_y[y_idx - (8 - MOB_SPRITE_OFFSET)]]);
+        uint8_t raster_idx =
+            alloc_raster_cmd(mobs_bot_y[mob_idx_by_y[y_idx - NUM_MOB_SPRITES]]);
 
         raster_set_sprite(
             raster_idx, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],

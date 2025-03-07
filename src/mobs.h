@@ -22,7 +22,7 @@ uint8_t mob_has_sprite(uint8_t idx);
 void mob_set_bb(uint8_t idx, struct bb bb);
 void mob_set_position(uint8_t idx, uint16_t map_x, uint8_t map_y);
 uint16_t mob_get_x(uint8_t idx);
-uint16_t mob_get_y(uint8_t idx);
+uint8_t mob_get_y(uint8_t idx);
 uint16_t mob_get_map_x(uint8_t idx);
 uint8_t mob_get_map_y(uint8_t idx);
 uint8_t mob_get_quad_x(uint8_t idx);
