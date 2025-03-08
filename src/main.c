@@ -295,7 +295,7 @@ static void arrow_player_collision(uint8_t idx) {
 
     switch (dir) {
         case NORTH:
-            if (player_dir == SOUTH && sword_state != SWORD_VISIBLE) {
+            if (player_dir == SOUTH && weapon_state != WEAPON_VISIBLE) {
                 uint8_t arrow_idx = create_blocked_arrow(x, y);
                 if (arrow_idx != MAX_MOBS) {
                     mob_set_target(arrow_idx, x + 5, y + 5);
@@ -307,7 +307,7 @@ static void arrow_player_collision(uint8_t idx) {
             break;
 
         case SOUTH:
-            if (player_dir == NORTH && sword_state != SWORD_VISIBLE) {
+            if (player_dir == NORTH && weapon_state != WEAPON_VISIBLE) {
                 uint8_t arrow_idx = create_blocked_arrow(x, y);
                 if (arrow_idx != MAX_MOBS) {
                     mob_set_target(arrow_idx, x + 5, y - 5);
@@ -319,7 +319,7 @@ static void arrow_player_collision(uint8_t idx) {
             break;
 
         case EAST:
-            if (player_dir == WEST && sword_state != SWORD_VISIBLE) {
+            if (player_dir == WEST && weapon_state != WEAPON_VISIBLE) {
                 uint8_t arrow_idx = create_blocked_arrow(x, y);
                 if (arrow_idx != MAX_MOBS) {
                     mob_set_target(arrow_idx, x - 5, y + 5);
@@ -331,7 +331,7 @@ static void arrow_player_collision(uint8_t idx) {
             break;
 
         case WEST:
-            if (player_dir == EAST && sword_state != SWORD_VISIBLE) {
+            if (player_dir == EAST && weapon_state != WEAPON_VISIBLE) {
                 uint8_t arrow_idx = create_blocked_arrow(x, y);
                 if (arrow_idx != MAX_MOBS) {
                     mob_set_target(arrow_idx, x - 5, y + 5);
@@ -708,6 +708,17 @@ void game_loop(void) {
         if (player_health <= 0 && !player_temp_invulnerable) {
             break;
         }
+
+        DEBUG_COLOR(COLOR_WHITE);
+        switch (read_keyboard()) {
+            case KEY_F1:
+                player_set_weapon(WEAPON_SWORD);
+                break;
+
+            case KEY_F3:
+                player_set_weapon(WEAPON_FLAIL);
+                break;
+        }
     }
 }
 
@@ -797,7 +808,7 @@ int main() {
         player_map_y =
             PLAYER_START_Y_QUAD * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
         player_dir = SOUTH;
-        player_sword_damage = 1;
+        player_weapon_damage = 1;
         player_health = 6;
         player_full_health = 6;
         player_set_coins(0);

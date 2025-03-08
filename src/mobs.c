@@ -31,7 +31,7 @@
 #define mob_clr_flag(idx, _flag) (mobs_flags[idx] &= ~(MOB_FLAG_##_flag))
 
 #define MOB_HANDLER_FLAG_PLAYER_COLLISION _BV(0)
-#define MOB_HANDLER_FLAG_SWORD_COLLISION _BV(1)
+#define MOB_HANDLER_FLAG_WEAPON_COLLISION _BV(1)
 #define MOB_HANDLER_FLAG_DEATH _BV(2)
 #define MOB_HANDLER_FLAG_REACHED_TARGET _BV(3)
 #define MOB_HANDLER_FLAG_UPDATE _BV(4)
@@ -74,7 +74,7 @@ static int8_t mobs_damage_push_y[MAX_MOBS];
 static uint8_t mobs_sprite_frame[MAX_MOBS];
 static uint8_t mobs_animation_rate[MAX_MOBS];
 static uint8_t mobs_animation_count[MAX_MOBS];
-static mob_sword_collision_handler mobs_on_sword_collision[MAX_MOBS];
+static mob_weapon_collision_handler mobs_on_weapon_collision[MAX_MOBS];
 static mob_action_handler mobs_on_player_collision[MAX_MOBS];
 static mob_action_handler mobs_on_death[MAX_MOBS];
 static mob_action_handler mobs_on_reached_target[MAX_MOBS];
@@ -202,23 +202,23 @@ void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_target_map_y[idx] = clamp_map_y(map_y);
 }
 
-uint8_t mob_has_sword_collision(uint8_t idx) {
-    return mob_check_handler_flag(idx, SWORD_COLLISION);
+uint8_t mob_has_weapon_collision(uint8_t idx) {
+    return mob_check_handler_flag(idx, WEAPON_COLLISION);
 }
 
-void mob_set_sword_collision_handler(uint8_t idx,
-                                     mob_sword_collision_handler handler) {
-    mobs_on_sword_collision[idx] = handler;
+void mob_set_weapon_collision_handler(uint8_t idx,
+                                      mob_weapon_collision_handler handler) {
+    mobs_on_weapon_collision[idx] = handler;
     if (handler) {
-        mob_set_handler_flag(idx, SWORD_COLLISION);
+        mob_set_handler_flag(idx, WEAPON_COLLISION);
     } else {
-        mob_clr_handler_flag(idx, SWORD_COLLISION);
+        mob_clr_handler_flag(idx, WEAPON_COLLISION);
     }
 }
 
-void mob_trigger_sword_collision(uint8_t idx, uint8_t damage) {
-    if (mob_check_handler_flag(idx, SWORD_COLLISION)) {
-        mobs_on_sword_collision[idx](idx, damage);
+void mob_trigger_weapon_collision(uint8_t idx, uint8_t damage) {
+    if (mob_check_handler_flag(idx, WEAPON_COLLISION)) {
+        mobs_on_weapon_collision[idx](idx, damage);
     }
 }
 
@@ -314,7 +314,7 @@ uint8_t alloc_mob(void) {
 
             mobs_sprite_frame[i] = 0;
 
-            mobs_on_sword_collision[i] = NULL;
+            mobs_on_weapon_collision[i] = NULL;
             mobs_on_player_collision[i] = NULL;
             mobs_on_death[i] = NULL;
             mobs_on_reached_target[i] = NULL;

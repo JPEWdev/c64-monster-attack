@@ -5,6 +5,7 @@
 
 #include <cbm.h>
 
+#include "flail.spm.h"
 #include "player_attack_east.spm.h"
 #include "player_attack_north.spm.h"
 #include "player_attack_south.spm.h"
@@ -83,3 +84,4 @@ const struct direction_sprite sword_sprite = {
     },
 };
 
+const struct sprite flail_sprite = FLAIL_SPRITE;

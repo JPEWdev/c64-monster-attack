@@ -43,7 +43,7 @@ uint8_t create_heart(uint16_t map_x, uint8_t map_y) {
     mob_set_color(idx, COLOR_RED);
     mob_set_animation_rate(idx, 15);
 
-    mob_set_sword_collision_handler(idx, heart_sword_collision);
+    mob_set_weapon_collision_handler(idx, heart_sword_collision);
     mob_set_player_collision_handler(idx, heart_player_collision);
     mob_set_update_handler(idx, heart_update);
 

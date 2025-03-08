@@ -19,7 +19,7 @@ uint8_t create_skeleton(uint16_t map_x, uint8_t map_y) {
     mob_set_damage_color(idx, COLOR_ORANGE);
     mob_set_animation_rate(idx, 60);
 
-    mob_set_sword_collision_handler(idx, damage_mob_pushback);
+    mob_set_weapon_collision_handler(idx, damage_mob_pushback);
     mob_set_speed(idx, 1, 5);
 
     return idx;

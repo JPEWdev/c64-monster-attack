@@ -12,16 +12,17 @@
 #include "move.h"
 #include "player-sprite.h"
 #include "reg.h"
+#include "trigconst.h"
 
 #define PLAYER_SPEED (2)
 
 #define PLAYER_ANIMATION_RATE (10)
-#define SWORD_ANIMATION_RATE (10)
+#define WEAPON_ANIMATION_RATE (10)
 
 uint16_t player_map_x;
 uint8_t player_map_y;
 enum direction player_dir = SOUTH;
-uint8_t player_sword_damage;
+uint8_t player_weapon_damage;
 uint8_t player_health;
 bool player_health_changed;
 uint8_t player_full_health;
@@ -31,15 +32,17 @@ static int8_t player_push_y;
 static uint8_t player_push_timer;
 static uint8_t player_frame;
 static uint8_t player_animation_counter;
-static uint8_t sword_frame;
-static uint8_t sword_animation_counter;
+static uint8_t weapon_frame;
+static uint8_t weapon_animation_counter;
 
 static bcd_u16 player_coins;
 bool player_coins_changed;
 
-uint8_t sword_state;
-uint16_t sword_x = 0;
-uint16_t sword_y = 0;
+uint8_t weapon_state;
+static enum weapon current_weapon;
+static uint16_t weapon_x = 0;
+static uint8_t weapon_y = 0;
+static uint8_t weapon_move_counter = 0;
 
 static const struct {
     int8_t x;
@@ -51,14 +54,48 @@ static const struct {
     /* WEST */ {-18, 2},
 };
 
+#define FLAIL_R (35)
+
+// The X and Y coordinates for the center of the flail sprite, relative to the
+// center of the player sprite
+//
+// Note that these are reversed to make the flail spin counter clockwise
+static const int8_t flail_x_offset[] = {
+    COS_0 * FLAIL_R,  COS_350* FLAIL_R, COS_340* FLAIL_R, COS_330* FLAIL_R,
+    COS_320* FLAIL_R, COS_310* FLAIL_R, COS_300* FLAIL_R, COS_290* FLAIL_R,
+    COS_280* FLAIL_R, COS_270* FLAIL_R, COS_260* FLAIL_R, COS_250* FLAIL_R,
+    COS_240* FLAIL_R, COS_230* FLAIL_R, COS_220* FLAIL_R, COS_210* FLAIL_R,
+    COS_200* FLAIL_R, COS_190* FLAIL_R, COS_180* FLAIL_R, COS_170* FLAIL_R,
+    COS_160* FLAIL_R, COS_150* FLAIL_R, COS_140* FLAIL_R, COS_130* FLAIL_R,
+    COS_120* FLAIL_R, COS_110* FLAIL_R, COS_100* FLAIL_R, COS_90* FLAIL_R,
+    COS_80* FLAIL_R,  COS_70* FLAIL_R,  COS_60* FLAIL_R,  COS_50* FLAIL_R,
+    COS_40* FLAIL_R,  COS_30* FLAIL_R,  COS_20* FLAIL_R,  COS_10* FLAIL_R,
+};
+static const int8_t flail_y_offset[] = {
+    SIN_0 * FLAIL_R,  SIN_350* FLAIL_R, SIN_340* FLAIL_R, SIN_330* FLAIL_R,
+    SIN_320* FLAIL_R, SIN_310* FLAIL_R, SIN_300* FLAIL_R, SIN_290* FLAIL_R,
+    SIN_280* FLAIL_R, SIN_270* FLAIL_R, SIN_260* FLAIL_R, SIN_250* FLAIL_R,
+    SIN_240* FLAIL_R, SIN_230* FLAIL_R, SIN_220* FLAIL_R, SIN_210* FLAIL_R,
+    SIN_200* FLAIL_R, SIN_190* FLAIL_R, SIN_180* FLAIL_R, SIN_170* FLAIL_R,
+    SIN_160* FLAIL_R, SIN_150* FLAIL_R, SIN_140* FLAIL_R, SIN_130* FLAIL_R,
+    SIN_120* FLAIL_R, SIN_110* FLAIL_R, SIN_100* FLAIL_R, SIN_90* FLAIL_R,
+    SIN_80* FLAIL_R,  SIN_70* FLAIL_R,  SIN_60* FLAIL_R,  SIN_50* FLAIL_R,
+    SIN_40* FLAIL_R,  SIN_30* FLAIL_R,  SIN_20* FLAIL_R,  SIN_10* FLAIL_R,
+};
+
+_Static_assert(sizeof(flail_x_offset) == sizeof(flail_y_offset),
+               "Flail x and y coordinates must be the same");
+
 void init_player(void) {
     player_push_x = 0;
     player_push_y = 0;
     player_push_timer = 0;
-    sword_state = SWORD_AWAY;
+    weapon_state = WEAPON_AWAY;
+    current_weapon = WEAPON_SWORD;
     player_temp_invulnerable = 0;
     player_frame = 0;
-    sword_frame = 0;
+    weapon_frame = 0;
+    weapon_move_counter = 0;
 }
 
 bool damage_player(uint8_t damage) {
@@ -128,6 +165,15 @@ void player_add_coins(bcd_u16 coins) {
     player_coins_changed = true;
 }
 
+void player_set_weapon(enum weapon weapon) {
+    if (current_weapon != weapon) {
+        current_weapon = weapon;
+        weapon_state = WEAPON_AWAY;
+        weapon_frame = 0;
+        weapon_move_counter = 0;
+    }
+}
+
 void draw_player(void) {
     uint8_t sprite_enable = VICII_SPRITE_ENABLE & 0xFC;
     uint8_t sprite_msb = VICII_SPRITE_MSB & 0xFC;
@@ -135,8 +181,8 @@ void draw_player(void) {
     uint8_t sprite_x_expand = VICII_SPRITE_X_EXPAND & 0xFC;
     uint8_t sprite_multicolor = VICII_SPRITE_MULTICOLOR & 0xFC;
 
-    if (sword_state == SWORD_VISIBLE) {
-        sprite_enable |= _BV(SWORD_SPRITE_IDX);
+    if (weapon_state == WEAPON_VISIBLE) {
+        sprite_enable |= _BV(WEAPON_SPRITE_IDX);
 
         // In debug mode, always setup the sword registers for a better idea of
         // the worst case frame time
@@ -144,32 +190,53 @@ void draw_player(void) {
     }
     {
 #endif
-        uint8_t flags = sword_sprite.flags[player_dir][sword_frame];
+        uint8_t flags;
+        uint8_t sprite_pointer;
+        uint8_t color;
+
+        switch (current_weapon) {
+            case WEAPON_SWORD:
+                flags = sword_sprite.flags[player_dir][weapon_frame];
+                sprite_pointer =
+                    sword_sprite.pointers[player_dir][weapon_frame];
+                color = COLOR_WHITE;
+                break;
+
+            case WEAPON_FLAIL:
+                flags = flail_sprite.flags[weapon_frame];
+                sprite_pointer = flail_sprite.pointers[weapon_frame];
+                color = COLOR_GRAY2;
+                break;
+        }
+
+        sprite_pointers_shadow[WEAPON_SPRITE_IDX] = sprite_pointer;
+
+        VICII_SPRITE_COLOR[WEAPON_SPRITE_IDX] = color;
 
         if (flags & SPRITE_IMAGE_EXPAND_X) {
-            sprite_x_expand |= _BV(SWORD_SPRITE_IDX);
+            sprite_x_expand |= _BV(WEAPON_SPRITE_IDX);
         }
 
         if (flags & SPRITE_IMAGE_EXPAND_Y) {
-            sprite_y_expand |= _BV(SWORD_SPRITE_IDX);
+            sprite_y_expand |= _BV(WEAPON_SPRITE_IDX);
         }
 
         if (flags & SPRITE_IMAGE_MULTICOLOR) {
-            sprite_multicolor |= _BV(SWORD_SPRITE_IDX);
+            sprite_multicolor |= _BV(WEAPON_SPRITE_IDX);
         }
 
-        VICII_SPRITE_POSITION[SWORD_SPRITE_IDX].x = sword_x & 0xFF;
-        VICII_SPRITE_POSITION[SWORD_SPRITE_IDX].y = sword_y;
-        if (sword_x & 0x100) {
-            sprite_msb |= _BV(SWORD_SPRITE_IDX);
+        VICII_SPRITE_POSITION[WEAPON_SPRITE_IDX].x = weapon_x & 0xFF;
+        VICII_SPRITE_POSITION[WEAPON_SPRITE_IDX].y = weapon_y;
+        if (weapon_x & 0x100) {
+            sprite_msb |= _BV(WEAPON_SPRITE_IDX);
         }
-
-        VICII_SPRITE_COLOR[SWORD_SPRITE_IDX] = COLOR_WHITE;
     }
 
-    struct direction_sprite const* sprite =
-        (sword_state == SWORD_VISIBLE) ? &player_attack_sprite : &player_sprite;
     {
+        struct direction_sprite const* sprite = (weapon_state == WEAPON_VISIBLE)
+                                                    ? &player_attack_sprite
+                                                    : &player_sprite;
+
         sprite_enable |= _BV(PLAYER_SPRITE_IDX);
         uint8_t flags = sprite->flags[player_dir][player_frame];
 
@@ -210,14 +277,10 @@ void draw_player(void) {
                 VICII_SPRITE_COLOR[PLAYER_SPRITE_IDX] = PLAYER_HIT_COLOR_3;
                 break;
         }
+        sprite_pointers_shadow[PLAYER_SPRITE_IDX] =
+            sprite->pointers[player_dir][player_frame];
     }
 
-    sprite_pointers_shadow[PLAYER_SPRITE_IDX] =
-        sprite->pointers[player_dir][player_frame];
-    if (sword_state == SWORD_VISIBLE) {
-        sprite_pointers_shadow[SWORD_SPRITE_IDX] =
-            sword_sprite.pointers[player_dir][sword_frame];
-    }
     VICII_SPRITE_ENABLE = sprite_enable;
     VICII_SPRITE_MSB = sprite_msb;
     VICII_SPRITE_Y_EXPAND = sprite_y_expand;
@@ -237,18 +300,20 @@ void tick_player(void) {
         player_push_y = 0;
     }
 
-    if (sword_state == SWORD_VISIBLE) {
+    if (weapon_state == WEAPON_VISIBLE) {
         struct bb16 const sword_bb16 =
-            bb_add_offset(get_sword_bb(), sword_x, sword_y);
+            bb_add_offset(get_weapon_bb(), weapon_x, weapon_y);
 
 #pragma clang loop unroll(full)
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
-            if (mob_has_sword_collision(idx) &&
+            if (mob_has_weapon_collision(idx) &&
                 check_mob_collision(idx, sword_bb16)) {
-                mob_trigger_sword_collision(idx, player_sword_damage);
-                sword_state = SWORD_ATTACKED;
+                mob_trigger_weapon_collision(idx, player_weapon_damage);
+                weapon_state = WEAPON_ATTACKED;
             }
         }
+    } else {
+        weapon_move_counter = 0;
     }
 
     struct bb16 const player_bb16 =
@@ -268,8 +333,8 @@ void tick_player(void) {
     if (player_health) {
         uint8_t m = read_joystick_2();
         if (m & _BV(JOYSTICK_FIRE_BIT)) {
-            if (sword_state == SWORD_AWAY) {
-                sword_state = SWORD_VISIBLE;
+            if (weapon_state == WEAPON_AWAY) {
+                weapon_state = WEAPON_VISIBLE;
             }
             if (m & _BV(JOYSTICK_UP_BIT)) {
                 move_delta_y -= PLAYER_SPEED / 2;
@@ -285,7 +350,7 @@ void tick_player(void) {
             }
         } else {
             uint8_t new_dir = DIRECTION_COUNT;
-            sword_state = SWORD_AWAY;
+            weapon_state = WEAPON_AWAY;
 
             if (m & _BV(JOYSTICK_UP_BIT)) {
                 new_dir = NORTH;
@@ -333,28 +398,94 @@ void tick_player(void) {
         }
     }
 
-    struct direction_sprite const* sprite =
-        (sword_state == SWORD_VISIBLE) ? &player_attack_sprite : &player_sprite;
+    struct direction_sprite const* sprite = (weapon_state == WEAPON_VISIBLE)
+                                                ? &player_attack_sprite
+                                                : &player_sprite;
 
     if (player_frame && player_frame >= sprite->num_frames[player_dir]) {
         player_frame = 0;
     }
-
-    if (sword_animation_counter == 0) {
-        sword_frame++;
-        sword_animation_counter = SWORD_ANIMATION_RATE;
-    } else {
-        sword_animation_counter = 0;
-    }
-
-    if (sword_frame && sword_frame >= sword_sprite.num_frames[player_dir]) {
-        sword_frame = 0;
-    }
-
     player_map_x += move_delta_x;
     player_map_y += move_delta_y;
-    sword_x = player_get_x() + sword_offset[player_dir].x;
-    sword_y = player_get_y() + sword_offset[player_dir].y;
+
+    if (weapon_state == WEAPON_VISIBLE) {
+        if (weapon_animation_counter == 0) {
+            weapon_frame++;
+            weapon_animation_counter = WEAPON_ANIMATION_RATE;
+        } else {
+            weapon_animation_counter = 0;
+        }
+
+        uint8_t max_frames;
+        switch (current_weapon) {
+            case WEAPON_SWORD:
+                max_frames = sword_sprite.num_frames[player_dir];
+                weapon_x = player_get_x() + sword_offset[player_dir].x;
+                weapon_y = player_get_y() + sword_offset[player_dir].y;
+                break;
+
+            case WEAPON_FLAIL:
+                max_frames = flail_sprite.num_frames;
+                if (weapon_move_counter < 0x80) {
+                    switch (player_dir) {
+                        case NORTH:
+                            weapon_x = player_get_x();
+                            weapon_y = player_get_y() - weapon_move_counter;
+                            break;
+
+                        case SOUTH:
+                            weapon_x = player_get_x();
+                            weapon_y = player_get_y() + weapon_move_counter;
+                            break;
+
+                        case EAST:
+                            weapon_x = player_get_x() + weapon_move_counter;
+                            weapon_y = player_get_y();
+                            break;
+
+                        case WEST:
+                            weapon_x = player_get_x() - weapon_move_counter;
+                            weapon_y = player_get_y();
+                            break;
+                    }
+                    if (weapon_move_counter >= FLAIL_R) {
+                        switch (player_dir) {
+                            case NORTH:
+                                weapon_move_counter =
+                                    0x80 + (ARRAY_SIZE(flail_x_offset) * 1) / 4;
+                                break;
+                            case SOUTH:
+                                weapon_move_counter =
+                                    0x80 + (ARRAY_SIZE(flail_x_offset) * 3) / 4;
+                                break;
+                            case EAST:
+                                weapon_move_counter = 0x80;
+                                break;
+                            case WEST:
+                                weapon_move_counter =
+                                    0x80 + ARRAY_SIZE(flail_x_offset) / 2;
+                                break;
+                        }
+                    } else {
+                        weapon_move_counter += 5;
+                    }
+                } else {
+                    if ((weapon_move_counter & 0x7F) >=
+                        ARRAY_SIZE(flail_x_offset)) {
+                        weapon_move_counter = 0x80;
+                    }
+                    weapon_x = player_get_x() +
+                               flail_x_offset[weapon_move_counter & 0x7F];
+                    weapon_y = player_get_y() +
+                               flail_y_offset[weapon_move_counter & 0x7F];
+                    weapon_move_counter++;
+                }
+                break;
+        }
+        if (weapon_frame >= max_frames) {
+            weapon_frame = 0;
+        }
+    }
 }
 
 extern const struct bb player_north_bb;
@@ -366,6 +497,8 @@ extern const struct bb sword_north_bb;
 extern const struct bb sword_south_bb;
 extern const struct bb sword_east_bb;
 extern const struct bb sword_west_bb;
+
+extern const struct bb flail_bb;
 
 struct bb const* get_player_bb(void) {
     switch (player_dir) {
@@ -380,7 +513,7 @@ struct bb const* get_player_bb(void) {
     }
 }
 
-struct bb const* get_sword_bb(void) {
+struct bb const* get_weapon_bb(void) {
     switch (player_dir) {
         case NORTH:
             return &sword_north_bb;

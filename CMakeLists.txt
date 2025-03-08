@@ -79,11 +79,12 @@ list(APPEND SOURCES
 )
 
 list(APPEND SPRITES
+    sprites/arrow_east.spm
     sprites/arrow_north.spm
     sprites/arrow_south.spm
-    sprites/arrow_east.spm
     sprites/arrow_west.spm
     sprites/coin.spm
+    sprites/flail.spm
     sprites/heart.spm
     sprites/player_attack_east.spm
     sprites/player_attack_north.spm
@@ -121,6 +122,14 @@ add_custom_command(
 )
 list(APPEND SOURCES map-data.c)
 
+add_custom_command(
+    COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/trigconst.py ${CMAKE_CURRENT_BINARY_DIR}/trigconst.h
+    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/trigconst.py
+    OUTPUT trigconst.h
+    VERBATIM
+)
+list(APPEND SOURCES trigconst.h)
+
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker-script.ld)
 
 set(PROG_OUTPUT ${CMAKE_PROJECT_NAME}.prg)
@@ -130,7 +139,7 @@ if (DEBUG_MODE)
 endif()
 target_compile_definitions(${PROG_OUTPUT} PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 target_compile_options(${PROG_OUTPUT} PRIVATE -Wall -Werror -fnonreentrant)
-target_include_directories(${PROG_OUTPUT} PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/sprites)
+target_include_directories(${PROG_OUTPUT} PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/sprites ${CMAKE_CURRENT_BINARY_DIR})
 
 set_target_properties(${PROG_OUTPUT} PROPERTIES
     LINK_FLAGS "-T ${LINKER_SCRIPT} -Wl,-Map,${CMAKE_PROJECT_NAME}.map"

@@ -11,13 +11,18 @@
 #include "sprite.h"
 #include "util.h"
 
-enum sword_state {
-    SWORD_AWAY,
-    SWORD_VISIBLE,
-    SWORD_ATTACKED,
+enum weapon_state {
+    WEAPON_AWAY,
+    WEAPON_VISIBLE,
+    WEAPON_ATTACKED,
 };
 
-#define SWORD_SPRITE_IDX (0)
+enum weapon {
+    WEAPON_SWORD,
+    WEAPON_FLAIL,
+};
+
+#define WEAPON_SPRITE_IDX (0)
 #define PLAYER_SPRITE_IDX (1)
 
 #define PLAYER_MAX_HEALTH (20)
@@ -30,16 +35,14 @@ enum sword_state {
 extern uint16_t player_map_x;
 extern uint8_t player_map_y;
 extern enum direction player_dir;
-extern uint8_t player_sword_damage;
+extern uint8_t player_weapon_damage;
 extern uint8_t player_health;
 extern bool player_health_changed;
 extern uint8_t player_full_health;
 extern bool player_coins_changed;
 extern uint8_t player_temp_invulnerable;
 
-extern uint8_t sword_state;
-extern uint16_t sword_x;
-extern uint16_t sword_y;
+extern uint8_t weapon_state;
 
 void init_player(void);
 uint16_t player_get_x(void);
@@ -49,6 +52,7 @@ uint8_t player_get_quad_y(void);
 bcd_u16 player_get_coins(void);
 void player_set_coins(bcd_u16 coins);
 void player_add_coins(bcd_u16 coins);
+void player_set_weapon(enum weapon weapon);
 bool damage_player(uint8_t damage);
 void damage_player_push(uint8_t damage, int8_t push_x, int8_t push_y);
 void heal_player(uint8_t health);
@@ -56,6 +60,6 @@ void draw_player(void);
 void tick_player(void);
 
 struct bb const* get_player_bb(void);
-struct bb const* get_sword_bb(void);
+struct bb const* get_weapon_bb(void);
 
 #endif
