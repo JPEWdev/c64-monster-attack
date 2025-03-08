@@ -17,7 +17,8 @@ uint16_t read_keyboard(void) {
         return NO_KEY;
     }
 
-    for (uint8_t col = 0, mask = 0x01; col < 64; col += 8, mask <<= 1) {
+#pragma clang loop unroll(full)
+    for (uint8_t col = 0, mask = 0x80; col < 64; col += 8, mask >>= 1) {
         CIA_1_PORT_A = ~mask;
         uint8_t p = ~CIA_1_PORT_B;
         if (p) {
