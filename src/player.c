@@ -59,35 +59,20 @@ static const struct {
 
 #define FLAIL_R (35)
 
-// The X and Y coordinates for the center of the flail sprite, relative to the
-// center of the player sprite
-//
-// Note that these are reversed to make the flail spin counter clockwise
-static const int8_t flail_x_offset[] = {
-    COS_0 * FLAIL_R,  COS_350* FLAIL_R, COS_340* FLAIL_R, COS_330* FLAIL_R,
-    COS_320* FLAIL_R, COS_310* FLAIL_R, COS_300* FLAIL_R, COS_290* FLAIL_R,
-    COS_280* FLAIL_R, COS_270* FLAIL_R, COS_260* FLAIL_R, COS_250* FLAIL_R,
-    COS_240* FLAIL_R, COS_230* FLAIL_R, COS_220* FLAIL_R, COS_210* FLAIL_R,
-    COS_200* FLAIL_R, COS_190* FLAIL_R, COS_180* FLAIL_R, COS_170* FLAIL_R,
-    COS_160* FLAIL_R, COS_150* FLAIL_R, COS_140* FLAIL_R, COS_130* FLAIL_R,
-    COS_120* FLAIL_R, COS_110* FLAIL_R, COS_100* FLAIL_R, COS_90* FLAIL_R,
-    COS_80* FLAIL_R,  COS_70* FLAIL_R,  COS_60* FLAIL_R,  COS_50* FLAIL_R,
-    COS_40* FLAIL_R,  COS_30* FLAIL_R,  COS_20* FLAIL_R,  COS_10* FLAIL_R,
+// A half sine wave describing the position of the flail relative to the
+// player. The other half is derived by wrapping and subtracting values, and
+// the cosine is derived by adding an offset of half the length
+static const int8_t flail_table[] = {
+    SIN_0 * FLAIL_R,  SIN_5* FLAIL_R,   SIN_10* FLAIL_R,  SIN_15* FLAIL_R,
+    SIN_20* FLAIL_R,  SIN_25* FLAIL_R,  SIN_30* FLAIL_R,  SIN_35* FLAIL_R,
+    SIN_40* FLAIL_R,  SIN_45* FLAIL_R,  SIN_50* FLAIL_R,  SIN_55* FLAIL_R,
+    SIN_60* FLAIL_R,  SIN_65* FLAIL_R,  SIN_70* FLAIL_R,  SIN_75* FLAIL_R,
+    SIN_80* FLAIL_R,  SIN_85* FLAIL_R,  SIN_90* FLAIL_R,  SIN_95* FLAIL_R,
+    SIN_100* FLAIL_R, SIN_105* FLAIL_R, SIN_110* FLAIL_R, SIN_115* FLAIL_R,
+    SIN_120* FLAIL_R, SIN_125* FLAIL_R, SIN_130* FLAIL_R, SIN_135* FLAIL_R,
+    SIN_140* FLAIL_R, SIN_145* FLAIL_R, SIN_150* FLAIL_R, SIN_155* FLAIL_R,
+    SIN_160* FLAIL_R, SIN_165* FLAIL_R, SIN_170* FLAIL_R, SIN_175* FLAIL_R,
 };
-static const int8_t flail_y_offset[] = {
-    SIN_0 * FLAIL_R,  SIN_350* FLAIL_R, SIN_340* FLAIL_R, SIN_330* FLAIL_R,
-    SIN_320* FLAIL_R, SIN_310* FLAIL_R, SIN_300* FLAIL_R, SIN_290* FLAIL_R,
-    SIN_280* FLAIL_R, SIN_270* FLAIL_R, SIN_260* FLAIL_R, SIN_250* FLAIL_R,
-    SIN_240* FLAIL_R, SIN_230* FLAIL_R, SIN_220* FLAIL_R, SIN_210* FLAIL_R,
-    SIN_200* FLAIL_R, SIN_190* FLAIL_R, SIN_180* FLAIL_R, SIN_170* FLAIL_R,
-    SIN_160* FLAIL_R, SIN_150* FLAIL_R, SIN_140* FLAIL_R, SIN_130* FLAIL_R,
-    SIN_120* FLAIL_R, SIN_110* FLAIL_R, SIN_100* FLAIL_R, SIN_90* FLAIL_R,
-    SIN_80* FLAIL_R,  SIN_70* FLAIL_R,  SIN_60* FLAIL_R,  SIN_50* FLAIL_R,
-    SIN_40* FLAIL_R,  SIN_30* FLAIL_R,  SIN_20* FLAIL_R,  SIN_10* FLAIL_R,
-};
-
-_Static_assert(sizeof(flail_x_offset) == sizeof(flail_y_offset),
-               "Flail x and y coordinates must be the same");
 
 void init_player(void) {
     player_push_x = 0;
@@ -468,20 +453,22 @@ void tick_player(void) {
                     }
                     if (weapon_move_counter >= FLAIL_R) {
                         switch (player_dir) {
-                            case NORTH:
-                                weapon_move_counter =
-                                    0x80 + (ARRAY_SIZE(flail_x_offset) * 1) / 4;
-                                break;
                             case SOUTH:
                                 weapon_move_counter =
-                                    0x80 + (ARRAY_SIZE(flail_x_offset) * 3) / 4;
+                                    0x80 +
+                                    (ARRAY_SIZE(flail_table) * 2 * 1) / 4;
                                 break;
-                            case EAST:
-                                weapon_move_counter = 0x80;
+                            case NORTH:
+                                weapon_move_counter =
+                                    0x80 +
+                                    (ARRAY_SIZE(flail_table) * 2 * 3) / 4;
                                 break;
                             case WEST:
+                                weapon_move_counter = 0x80;
+                                break;
+                            case EAST:
                                 weapon_move_counter =
-                                    0x80 + ARRAY_SIZE(flail_x_offset) / 2;
+                                    0x80 + (ARRAY_SIZE(flail_table) * 2) / 2;
                                 break;
                         }
                     } else {
@@ -489,34 +476,49 @@ void tick_player(void) {
                     }
                 } else {
                     if ((weapon_move_counter & 0x7F) >=
-                        ARRAY_SIZE(flail_x_offset)) {
-                        weapon_move_counter = 0x80;
+                        ARRAY_SIZE(flail_table) * 2) {
+                        weapon_move_counter -= ARRAY_SIZE(flail_table) * 2;
                     }
-                    weapon_x = player_get_x() +
-                               flail_x_offset[weapon_move_counter & 0x7F];
-                    weapon_y = player_get_y() +
-                               flail_y_offset[weapon_move_counter & 0x7F];
+
+                    uint8_t y_idx = weapon_move_counter & 0x7F;
+                    if (y_idx >= ARRAY_SIZE(flail_table)) {
+                        weapon_y = player_get_y() -
+                                   flail_table[y_idx - ARRAY_SIZE(flail_table)];
+                    } else {
+                        weapon_y = player_get_y() + flail_table[y_idx];
+                    }
+
+                    uint8_t x_idx = (weapon_move_counter & 0x7F) +
+                                    ARRAY_SIZE(flail_table) / 2;
+                    if (x_idx >= ARRAY_SIZE(flail_table) * 2) {
+                        weapon_x =
+                            player_get_x() -
+                            flail_table[x_idx - ARRAY_SIZE(flail_table) * 2];
+                    } else if (x_idx >= ARRAY_SIZE(flail_table)) {
+                        weapon_x = player_get_x() +
+                                   flail_table[x_idx - ARRAY_SIZE(flail_table)];
+                    } else {
+                        weapon_x = player_get_x() - flail_table[x_idx];
+                    }
 
                     switch (flail_damage) {
                         case 1:
-                            if (tick_count & 1) {
-                                weapon_move_counter++;
-                                flail_timer++;
-                            }
-                            break;
-
-                        case 2:
                             weapon_move_counter++;
                             flail_timer++;
                             break;
 
-                        case 3:
+                        case 2:
                             weapon_move_counter += 2;
+                            flail_timer += 2;
+                            break;
+
+                        case 3:
+                            weapon_move_counter += 4;
                             break;
                     }
 
                     if (flail_damage < 3 &&
-                        flail_timer >= ARRAY_SIZE(flail_x_offset)) {
+                        flail_timer >= ARRAY_SIZE(flail_table) * 2) {
                         flail_damage++;
                         flail_timer = 0;
                     }
