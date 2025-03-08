@@ -12,6 +12,7 @@
 #include "move.h"
 #include "player-sprite.h"
 #include "reg.h"
+#include "tick.h"
 #include "trigconst.h"
 
 #define PLAYER_SPEED (2)
@@ -43,6 +44,8 @@ static enum weapon current_weapon;
 static uint16_t weapon_x = 0;
 static uint8_t weapon_y = 0;
 static uint8_t weapon_move_counter = 0;
+static uint8_t flail_timer;
+static uint8_t flail_damage;
 
 static const struct {
     int8_t x;
@@ -308,8 +311,21 @@ void tick_player(void) {
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
             if (mob_has_weapon_collision(idx) &&
                 check_mob_collision(idx, sword_bb16)) {
-                mob_trigger_weapon_collision(idx, player_weapon_damage);
-                weapon_state = WEAPON_ATTACKED;
+                switch (current_weapon) {
+                    case WEAPON_SWORD:
+                        mob_trigger_weapon_collision(idx, player_weapon_damage);
+                        weapon_state = WEAPON_ATTACKED;
+                        break;
+
+                    case WEAPON_FLAIL:
+                        mob_trigger_weapon_collision(idx, flail_damage);
+                        flail_damage--;
+                        flail_timer = 0;
+                        if (!flail_damage) {
+                            weapon_state = WEAPON_ATTACKED;
+                        }
+                        break;
+                }
             }
         }
     } else {
@@ -427,6 +443,8 @@ void tick_player(void) {
             case WEAPON_FLAIL:
                 max_frames = flail_sprite.num_frames;
                 if (weapon_move_counter < 0x80) {
+                    flail_damage = 1;
+                    flail_timer = 0;
                     switch (player_dir) {
                         case NORTH:
                             weapon_x = player_get_x();
@@ -478,7 +496,30 @@ void tick_player(void) {
                                flail_x_offset[weapon_move_counter & 0x7F];
                     weapon_y = player_get_y() +
                                flail_y_offset[weapon_move_counter & 0x7F];
-                    weapon_move_counter++;
+
+                    switch (flail_damage) {
+                        case 1:
+                            if (tick_count & 1) {
+                                weapon_move_counter++;
+                                flail_timer++;
+                            }
+                            break;
+
+                        case 2:
+                            weapon_move_counter++;
+                            flail_timer++;
+                            break;
+
+                        case 3:
+                            weapon_move_counter += 2;
+                            break;
+                    }
+
+                    if (flail_damage < 3 &&
+                        flail_timer >= ARRAY_SIZE(flail_x_offset)) {
+                        flail_damage++;
+                        flail_timer = 0;
+                    }
                 }
                 break;
         }
