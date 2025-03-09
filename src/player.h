@@ -53,6 +53,7 @@ bcd_u16 player_get_coins(void);
 void player_set_coins(bcd_u16 coins);
 void player_add_coins(bcd_u16 coins);
 void player_set_weapon(enum weapon weapon);
+enum weapon player_get_weapon(void);
 bool damage_player(uint8_t damage);
 void damage_player_push(uint8_t damage, int8_t push_x, int8_t push_y);
 void heal_player(uint8_t health);

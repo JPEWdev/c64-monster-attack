@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "bcd.h"
+#include "chars.h"
 #include "draw.h"
 #include "input.h"
 #include "isr.h"
@@ -30,14 +31,13 @@
 #define DEFAULT_VICII_CTRL_1 (0x1B)
 #define DEFAULT_VICII_CTRL_2 (0xC8)
 
-#define HEART_CHAR (0x2)
-#define HALF_HEART_CHAR (0x1)
-#define BLANK_CHAR (0x20)
-
 #define HEALTH_X_TILE (0)
 #define HEALTH_Y_TILE (0)
 #define COIN_X_TILE (0)
 #define COIN_Y_TILE (1)
+
+#define WEAPON_X_TILE (18)
+#define WEAPON_Y_TILE (0)
 
 #define PLAYER_START_X_QUAD ((MAP_WIDTH_QUAD / 2) + 3)
 #define PLAYER_START_Y_QUAD (MAP_HEIGHT_QUAD / 2)
@@ -520,6 +520,24 @@ static void pad_string(char* str, uint8_t size, uint8_t offset) {
     str[size - 1] = '\0';
 }
 
+static void draw_current_weapon(void) {
+    switch (player_get_weapon()) {
+        case WEAPON_SWORD:
+            put_char_xy(WEAPON_X_TILE + 1, WEAPON_Y_TILE, SWORD_LEFT_CHAR);
+            set_color(WEAPON_X_TILE + 1, WEAPON_Y_TILE, COLOR_WHITE);
+            put_char_xy(WEAPON_X_TILE + 2, WEAPON_Y_TILE, SWORD_RIGHT_CHAR);
+            set_color(WEAPON_X_TILE + 2, WEAPON_Y_TILE, COLOR_WHITE);
+            break;
+
+        case WEAPON_FLAIL:
+            put_char_xy(WEAPON_X_TILE + 1, WEAPON_Y_TILE, FLAIL_LEFT_CHAR);
+            set_color(WEAPON_X_TILE + 1, WEAPON_Y_TILE, COLOR_GRAY2);
+            put_char_xy(WEAPON_X_TILE + 2, WEAPON_Y_TILE, FLAIL_RIGHT_CHAR);
+            set_color(WEAPON_X_TILE + 2, WEAPON_Y_TILE, COLOR_GRAY2);
+            break;
+    }
+}
+
 static bool draw_coins = false;
 static char coin_string_buf[] = "$####";
 static bool update_coin_string(void) {
@@ -606,6 +624,12 @@ void game_loop(void) {
     fill_color(SCORE_TEXT_X - sizeof(raster_avg_str), SCORE_TEXT_Y + 1,
                SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
 #endif
+
+    put_char_xy(WEAPON_X_TILE, WEAPON_Y_TILE, '(');
+    set_color(WEAPON_X_TILE, WEAPON_Y_TILE, COLOR_BLUE);
+    put_char_xy(WEAPON_X_TILE + 3, WEAPON_Y_TILE, ')');
+    set_color(WEAPON_X_TILE + 3, WEAPON_Y_TILE, COLOR_BLUE);
+    draw_current_weapon();
 
     uint8_t delay_frame = 0;
 
@@ -713,10 +737,12 @@ void game_loop(void) {
         switch (read_keyboard()) {
             case KEY_F1:
                 player_set_weapon(WEAPON_SWORD);
+                draw_current_weapon();
                 break;
 
             case KEY_F3:
                 player_set_weapon(WEAPON_FLAIL);
+                draw_current_weapon();
                 break;
         }
     }

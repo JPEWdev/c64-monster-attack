@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "chars.h"
 #include "isr.h"
 #include "map.h"
 #include "reg.h"
@@ -50,20 +51,6 @@ void fill_color(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color) {
         memset(&color_data[y][x1], color, (x2 - x1) + 1);
     }
 }
-
-#define SHORE_EAST_CHAR (0x73)
-#define SHORE_SOUTH_EAST_CHAR (0x74)
-#define SHORE_SOUTH_CHAR (0x75)
-#define SHORE_SOUTH_WEST_CHAR (0x76)
-#define SHORE_WEST_CHAR (0x77)
-#define SHORE_NORTH_WEST_CHAR (0x78)
-#define SHORE_NORTH_CHAR (0x79)
-#define SHORE_NORTH_EAST_CHAR (0x7A)
-#define WAVES_1_CHAR (0x7B)
-#define WAVES_2_CHAR (0x7C)
-#define BRICKS_1_CHAR (0x7D)
-#define BRICKS_2_CHAR (0x7E)
-#define FILL_CHAR (0x7F)
 
 static void put_quad_chars(uint8_t x, uint8_t y, uint8_t nw, uint8_t ne,
                            uint8_t sw, uint8_t se) {

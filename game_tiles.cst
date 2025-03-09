@@ -50,12 +50,12 @@
     <charcode>3</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>24</data>
+      <data>48</data>
+      <data>255</data>
+      <data>255</data>
+      <data>48</data>
+      <data>24</data>
       <data>0</data>
     </chardata>
   </character>
@@ -65,8 +65,8 @@
       <data>0</data>
       <data>0</data>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>254</data>
+      <data>248</data>
       <data>0</data>
       <data>0</data>
       <data>0</data>
@@ -78,9 +78,9 @@
       <data>0</data>
       <data>0</data>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>241</data>
+      <data>250</data>
+      <data>4</data>
       <data>0</data>
       <data>0</data>
     </chardata>
@@ -89,12 +89,12 @@
     <charcode>6</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>12</data>
+      <data>158</data>
+      <data>127</data>
+      <data>63</data>
+      <data>30</data>
+      <data>12</data>
       <data>0</data>
     </chardata>
   </character>
@@ -102,12 +102,12 @@
     <charcode>7</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>127</data>
+      <data>64</data>
+      <data>96</data>
+      <data>56</data>
+      <data>31</data>
+      <data>7</data>
       <data>0</data>
     </chardata>
   </character>
@@ -115,12 +115,12 @@
     <charcode>8</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>254</data>
+      <data>2</data>
+      <data>6</data>
+      <data>28</data>
+      <data>248</data>
+      <data>224</data>
       <data>0</data>
     </chardata>
   </character>

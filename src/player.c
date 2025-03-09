@@ -162,6 +162,10 @@ void player_set_weapon(enum weapon weapon) {
     }
 }
 
+enum weapon player_get_weapon(void) {
+    return current_weapon;
+}
+
 void draw_player(void) {
     uint8_t sprite_enable = VICII_SPRITE_ENABLE & 0xFC;
     uint8_t sprite_msb = VICII_SPRITE_MSB & 0xFC;
