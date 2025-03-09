@@ -162,9 +162,10 @@ void player_set_weapon(enum weapon weapon) {
     }
 }
 
-enum weapon player_get_weapon(void) {
-    return current_weapon;
-}
+enum weapon player_get_weapon(void) { return current_weapon; }
+
+uint16_t player_weapon_get_x(void) { return weapon_x; }
+uint8_t player_weapon_get_y(void) { return weapon_y; }
 
 void draw_player(void) {
     uint8_t sprite_enable = VICII_SPRITE_ENABLE & 0xFC;
@@ -300,18 +301,29 @@ void tick_player(void) {
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
             if (mob_has_weapon_collision(idx) &&
                 check_mob_collision(idx, sword_bb16)) {
+                bool hostile = mob_is_hostile(idx);
+
                 switch (current_weapon) {
                     case WEAPON_SWORD:
-                        mob_trigger_weapon_collision(idx, player_weapon_damage);
-                        weapon_state = WEAPON_ATTACKED;
+                        mob_trigger_weapon_collision(idx, player_weapon_damage,
+                                                     player_dir);
+                        if (hostile) {
+                            weapon_state = WEAPON_ATTACKED;
+                        }
                         break;
 
                     case WEAPON_FLAIL:
-                        mob_trigger_weapon_collision(idx, flail_damage);
-                        flail_damage--;
-                        flail_timer = 0;
-                        if (!flail_damage) {
-                            weapon_state = WEAPON_ATTACKED;
+                        mob_trigger_weapon_collision(
+                            idx, flail_damage,
+                            dir_from(player_map_x, player_map_y,
+                                     mob_get_map_x(idx), mob_get_map_y(idx)));
+
+                        if (hostile) {
+                            flail_damage--;
+                            flail_timer = 0;
+                            if (!flail_damage) {
+                                weapon_state = WEAPON_ATTACKED;
+                            }
                         }
                         break;
                 }

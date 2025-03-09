@@ -25,6 +25,7 @@
 #define MOB_FLAG_IN_USE _BV(0)
 #define MOB_FLAG_REACHED_TARGET _BV(1)
 #define MOB_FLAG_HAS_SPRITE _BV(2)
+#define MOB_FLAG_HOSTILE _BV(3)
 
 #define mob_check_flag(idx, _flag) (mobs_flags[idx] & MOB_FLAG_##_flag)
 #define mob_set_flag(idx, _flag) (mobs_flags[idx] |= MOB_FLAG_##_flag)
@@ -216,9 +217,20 @@ void mob_set_weapon_collision_handler(uint8_t idx,
     }
 }
 
-void mob_trigger_weapon_collision(uint8_t idx, uint8_t damage) {
+void mob_trigger_weapon_collision(uint8_t idx, uint8_t damage,
+                                  enum direction dir) {
     if (mob_check_handler_flag(idx, WEAPON_COLLISION)) {
-        mobs_on_weapon_collision[idx](idx, damage);
+        mobs_on_weapon_collision[idx](idx, damage, dir);
+    }
+}
+
+uint8_t mob_is_hostile(uint8_t idx) { return mob_check_flag(idx, HOSTILE); }
+
+void mob_set_hostile(uint8_t idx, bool hostile) {
+    if (hostile) {
+        mob_set_flag(idx, HOSTILE);
+    } else {
+        mob_clr_flag(idx, HOSTILE);
     }
 }
 
@@ -659,11 +671,11 @@ void damage_mob(uint8_t idx, uint8_t damage) {
     }
 }
 
-void damage_mob_pushback(uint8_t idx, uint8_t damage) {
+void damage_mob_pushback(uint8_t idx, uint8_t damage, enum direction dir) {
     mobs_hp[idx] -= damage;
     mobs_damage_counter[idx] = 5;
     // Note if HP <= 0, mob will be killed after pushback
-    switch (player_dir) {
+    switch (dir) {
         case NORTH:
             mobs_damage_push_x[idx] = 0;
             mobs_damage_push_y[idx] = -DAMAGE_PUSH;

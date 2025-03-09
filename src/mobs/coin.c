@@ -10,7 +10,8 @@ static struct {
     int16_t ttl[MAX_MOBS];
 } coin_data;
 
-static void coin_weapon_collision(uint8_t idx, uint8_t damage) {
+static void coin_weapon_collision(uint8_t idx, uint8_t damage,
+                                  enum direction dir) {
     player_add_coins(coin_data.value[idx]);
     kill_mob(idx);
 }
@@ -44,6 +45,7 @@ uint8_t create_coin(uint16_t map_x, uint8_t map_y, bcd_u8 value) {
     mob_set_hp(idx, 0);
     mob_set_color(idx, COLOR_YELLOW);
     mob_set_animation_rate(idx, 15);
+    mob_set_hostile(idx, false);
 
     mob_set_weapon_collision_handler(idx, coin_weapon_collision);
     mob_set_player_collision_handler(idx, coin_player_collision);

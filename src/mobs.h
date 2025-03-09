@@ -12,7 +12,8 @@
 
 #define FRAMES(f) ARRAY_SIZE(f), f
 
-typedef void (*mob_weapon_collision_handler)(uint8_t idx, uint8_t damage);
+typedef void (*mob_weapon_collision_handler)(uint8_t idx, uint8_t damage,
+                                             enum direction dir);
 typedef void (*mob_action_handler)(uint8_t idx);
 typedef void (*mob_update_handler)(uint8_t idx, uint8_t num_frames);
 
@@ -35,7 +36,10 @@ void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y);
 uint8_t mob_has_weapon_collision(uint8_t idx);
 void mob_set_weapon_collision_handler(uint8_t idx,
                                       mob_weapon_collision_handler handler);
-void mob_trigger_weapon_collision(uint8_t idx, uint8_t damage);
+void mob_trigger_weapon_collision(uint8_t idx, uint8_t damage,
+                                  enum direction dir);
+uint8_t mob_is_hostile(uint8_t idx);
+void mob_set_hostile(uint8_t idx, bool hostile);
 uint8_t mob_has_player_collision(uint8_t idx);
 void mob_set_player_collision_handler(uint8_t idx, mob_action_handler handler);
 void mob_trigger_player_collision(uint8_t idx);
@@ -52,7 +56,7 @@ void tick_mobs(void);
 void update_mobs(void);
 void capture_mob_collisions(void);
 void damage_mob(uint8_t idx, uint8_t damage);
-void damage_mob_pushback(uint8_t idx, uint8_t damage);
+void damage_mob_pushback(uint8_t idx, uint8_t damage, enum direction dir);
 void kill_mob(uint8_t idx);
 
 bool check_mob_collision(uint8_t idx, struct bb16 const bb);
