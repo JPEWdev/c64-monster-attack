@@ -566,7 +566,7 @@ void tick_mobs(void) {
                             mob_inc_y(i, mobs_speed_pixels[i]);
                         }
                     } else if (mobs_map_y[i] > mobs_target_map_y[i]) {
-                        uint8_t delta = mobs_target_map_y[i] - mobs_map_y[i];
+                        uint8_t delta = mobs_map_y[i] - mobs_target_map_y[i];
                         if (delta < mobs_speed_pixels[i]) {
                             mob_inc_y(i, -delta);
                         } else {
