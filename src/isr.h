@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_RASTER_CMDS (4)
+#define MAX_RASTER_CMDS (5)
 
 extern uint8_t frame_count;
 extern uint8_t last_num_missed_sprites;

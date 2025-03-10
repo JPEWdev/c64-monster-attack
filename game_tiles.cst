@@ -128,12 +128,12 @@
     <charcode>9</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>168</data>
+      <data>84</data>
+      <data>63</data>
+      <data>63</data>
+      <data>84</data>
+      <data>168</data>
       <data>0</data>
     </chardata>
   </character>
@@ -141,12 +141,12 @@
     <charcode>10</charcode>
     <chardata>
       <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
-      <data>0</data>
+      <data>4</data>
+      <data>6</data>
+      <data>255</data>
+      <data>255</data>
+      <data>6</data>
+      <data>4</data>
       <data>0</data>
     </chardata>
   </character>

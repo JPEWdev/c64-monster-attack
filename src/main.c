@@ -22,6 +22,9 @@
 #include "sprite.h"
 #include "tick.h"
 
+_Static_assert(MAX_RASTER_CMDS == MAX_MOBS - 6 + 2,
+               "Wrong number of raster command");
+
 // 67 is a bad line so we start right after that
 #define STATUS_INT_LINE (68)
 
@@ -346,12 +349,12 @@ static void arrow_player_collision(uint8_t idx) {
 
 static void shoot_arrow(uint8_t idx, enum direction direction,
                         uint16_t target_x, uint8_t target_y) {
-    uint8_t arrow_idx =
-        create_arrow(mob_get_map_x(idx), mob_get_map_y(idx), direction);
+    uint8_t arrow_idx = alloc_mob();
 
     if (arrow_idx == MAX_MOBS) {
         return;
     }
+    create_arrow(arrow_idx, mob_get_map_x(idx), mob_get_map_y(idx), direction);
 
     mob_set_target(arrow_idx, target_x, target_y);
     mob_set_player_collision_handler(arrow_idx, arrow_player_collision);
@@ -535,6 +538,13 @@ static void draw_current_weapon(void) {
             put_char_xy(WEAPON_X_TILE + 2, WEAPON_Y_TILE, FLAIL_RIGHT_CHAR);
             set_color(WEAPON_X_TILE + 2, WEAPON_Y_TILE, COLOR_GRAY2);
             break;
+
+        case WEAPON_BOW:
+            put_char_xy(WEAPON_X_TILE + 1, WEAPON_Y_TILE, ARROW_LEFT_CHAR);
+            set_color(WEAPON_X_TILE + 1, WEAPON_Y_TILE, COLOR_BROWN);
+            put_char_xy(WEAPON_X_TILE + 2, WEAPON_Y_TILE, ARROW_RIGHT_CHAR);
+            set_color(WEAPON_X_TILE + 2, WEAPON_Y_TILE, COLOR_BROWN);
+            break;
     }
 }
 
@@ -682,7 +692,9 @@ void game_loop(void) {
         DISABLE_INTERRUPTS() {
             prepare_raster_cmds();
             create_status_raster_cmd();
-            draw_mobs();
+        }
+        draw_mobs();
+        DISABLE_INTERRUPTS() {
             create_done_raster_cmd();
             finish_raster_cmds();
         }
@@ -742,6 +754,11 @@ void game_loop(void) {
 
             case KEY_F3:
                 player_set_weapon(WEAPON_FLAIL);
+                draw_current_weapon();
+                break;
+
+            case KEY_F5:
+                player_set_weapon(WEAPON_BOW);
                 draw_current_weapon();
                 break;
         }

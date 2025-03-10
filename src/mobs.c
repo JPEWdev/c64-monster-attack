@@ -26,6 +26,7 @@
 #define MOB_FLAG_REACHED_TARGET _BV(1)
 #define MOB_FLAG_HAS_SPRITE _BV(2)
 #define MOB_FLAG_HOSTILE _BV(3)
+#define MOB_FLAG_HAS_TARGET _BV(4)
 
 #define mob_check_flag(idx, _flag) (mobs_flags[idx] & MOB_FLAG_##_flag)
 #define mob_set_flag(idx, _flag) (mobs_flags[idx] |= MOB_FLAG_##_flag)
@@ -36,6 +37,7 @@
 #define MOB_HANDLER_FLAG_DEATH _BV(2)
 #define MOB_HANDLER_FLAG_REACHED_TARGET _BV(3)
 #define MOB_HANDLER_FLAG_UPDATE _BV(4)
+#define MOB_HANDLER_FLAG_MOB_COLLISION _BV(5)
 
 #define mob_check_handler_flag(idx, _handler) \
     (mobs_handler_flags[idx] & MOB_HANDLER_FLAG_##_handler)
@@ -80,6 +82,7 @@ static mob_action_handler mobs_on_player_collision[MAX_MOBS];
 static mob_action_handler mobs_on_death[MAX_MOBS];
 static mob_action_handler mobs_on_reached_target[MAX_MOBS];
 static mob_update_handler mobs_on_update[MAX_MOBS];
+static mob_mob_collision_handler mobs_on_mob_collision[MAX_MOBS];
 static uint8_t mobs_speed_counter[MAX_MOBS];
 static uint8_t mobs_last_update_tick[MAX_MOBS];
 
@@ -201,6 +204,7 @@ void mob_set_speed(uint8_t idx, uint8_t speed_pixels, uint8_t speed_frames) {
 void mob_set_target(uint8_t idx, uint16_t map_x, uint8_t map_y) {
     mobs_target_map_x[idx] = map_x;
     mobs_target_map_y[idx] = clamp_map_y(map_y);
+    mob_set_flag(idx, HAS_TARGET);
 }
 
 uint8_t mob_has_weapon_collision(uint8_t idx) {
@@ -284,6 +288,16 @@ void mob_set_animation_rate(uint8_t idx, uint8_t frames) {
     mobs_animation_rate[idx] = frames;
 }
 
+void mob_set_mob_collision_handler(uint8_t idx,
+                                   mob_mob_collision_handler handler) {
+    mobs_on_mob_collision[idx] = handler;
+    if (handler) {
+        mob_set_handler_flag(idx, MOB_COLLISION);
+    } else {
+        mob_clr_handler_flag(idx, MOB_COLLISION);
+    }
+}
+
 static void mob_inc_x(uint8_t idx, int8_t delta) {
     mobs_map_x[idx] += delta;
     mobs_bb16_east[idx] += delta;
@@ -296,49 +310,58 @@ static void mob_inc_y(uint8_t idx, int8_t delta) {
     mobs_bb16_south[idx] += delta;
 }
 
+uint8_t mob_in_use(uint8_t idx) { return mob_check_flag(idx, IN_USE); }
+
 uint8_t alloc_mob(void) {
-    for (uint8_t i = 0; i < MAX_MOBS; i++) {
-        if (!mob_check_flag(i, IN_USE)) {
-            mobs_flags[i] = MOB_FLAG_IN_USE;
-            mobs_handler_flags[i] = 0;
-
-            mobs_sprite[i] = NULL;
-            mobs_bb_north[i] = 0;
-            mobs_bb_south[i] = SPRITE_HEIGHT_PX - 1;
-            mobs_bb_east[i] = SPRITE_WIDTH_PX - 1;
-            mobs_bb_west[i] = 0;
-            mobs_map_x[i] = 0;
-            mobs_map_y[i] = 0;
-            mobs_bot_y[i] = 0xFF;
-            mobs_hp[i] = 0;
-            mobs_color[i] = 0;
-            mobs_damage_color[i] = 0;
-            mobs_damage_counter[i] = 0;
-
-            mobs_speed_pixels[i] = 0;
-            mobs_speed_frames[i] = 0;
-
-            mobs_target_map_x[i] = 0;
-            mobs_target_map_y[i] = 0;
-
-            mobs_damage_push_x[i] = 0;
-            mobs_damage_push_y[i] = 0;
-
-            mobs_sprite_frame[i] = 0;
-
-            mobs_on_weapon_collision[i] = NULL;
-            mobs_on_player_collision[i] = NULL;
-            mobs_on_death[i] = NULL;
-            mobs_on_reached_target[i] = NULL;
-            mobs_on_update[i] = NULL;
-
-            mobs_speed_counter[i] = 1;
-            mobs_last_update_tick[i] = tick_count;
-            mob_calc_bb16(i);
+    for (uint8_t i = 0; i < MAX_MOBS - RESERVED_MOBS; i++) {
+        if (alloc_mob_idx(i)) {
             return i;
         }
     }
     return MAX_MOBS;
+}
+
+bool alloc_mob_idx(uint8_t idx) {
+    if (mob_check_flag(idx, IN_USE)) {
+        return false;
+    }
+    mobs_flags[idx] = MOB_FLAG_IN_USE;
+    mobs_handler_flags[idx] = 0;
+
+    mobs_sprite[idx] = NULL;
+    mobs_bb_north[idx] = 0;
+    mobs_bb_south[idx] = SPRITE_HEIGHT_PX - 1;
+    mobs_bb_east[idx] = SPRITE_WIDTH_PX - 1;
+    mobs_bb_west[idx] = 0;
+    mobs_map_x[idx] = 0;
+    mobs_map_y[idx] = 0;
+    mobs_bot_y[idx] = 0xFF;
+    mobs_hp[idx] = 0;
+    mobs_color[idx] = 0;
+    mobs_damage_color[idx] = 0;
+    mobs_damage_counter[idx] = 0;
+
+    mobs_speed_pixels[idx] = 0;
+    mobs_speed_frames[idx] = 0;
+
+    mobs_target_map_x[idx] = 0;
+    mobs_target_map_y[idx] = 0;
+
+    mobs_damage_push_x[idx] = 0;
+    mobs_damage_push_y[idx] = 0;
+
+    mobs_sprite_frame[idx] = 0;
+
+    mobs_on_weapon_collision[idx] = NULL;
+    mobs_on_player_collision[idx] = NULL;
+    mobs_on_death[idx] = NULL;
+    mobs_on_reached_target[idx] = NULL;
+    mobs_on_update[idx] = NULL;
+
+    mobs_speed_counter[idx] = 1;
+    mobs_last_update_tick[idx] = tick_count;
+    mob_calc_bb16(idx);
+    return true;
 }
 
 void destroy_mob(uint8_t idx) {
@@ -476,13 +499,16 @@ void draw_mobs(void) {
             sprite_multicolor &= ~sprite_mask;
         }
 
-        uint8_t raster_idx =
-            alloc_raster_cmd(mobs_bot_y[mob_idx_by_y[y_idx - NUM_MOB_SPRITES]]);
+        DISABLE_INTERRUPTS() {
+            uint8_t raster_idx = alloc_raster_cmd(
+                mobs_bot_y[mob_idx_by_y[y_idx - NUM_MOB_SPRITES]]);
 
-        raster_set_sprite(
-            raster_idx, sprite_idx, mobs_sprite[mob_idx]->pointers[frame],
-            mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx), color, sprite_msb,
-            sprite_x_expand, sprite_y_expand, sprite_multicolor);
+            raster_set_sprite(raster_idx, sprite_idx,
+                              mobs_sprite[mob_idx]->pointers[frame],
+                              mob_get_x(mob_idx) & 0xFF, mob_get_y(mob_idx),
+                              color, sprite_msb, sprite_x_expand,
+                              sprite_y_expand, sprite_multicolor);
+        }
     }
 }
 
@@ -548,9 +574,7 @@ void tick_mobs(void) {
                 mob_inc_y(i, move_y);
             }
         } else {
-            if (mobs_speed_pixels[i] &&
-                (mobs_map_x[i] != mobs_target_map_x[i] ||
-                 mobs_map_y[i] != mobs_target_map_y[i])) {
+            if (mob_check_flag(i, HAS_TARGET) && mobs_speed_pixels[i]) {
                 mobs_speed_counter[i]--;
                 if (mobs_speed_counter[i] == 0) {
                     mobs_speed_counter[i] = mobs_speed_frames[i];
@@ -588,6 +612,7 @@ void tick_mobs(void) {
 
                     if (mobs_map_x[i] == mobs_target_map_x[i] &&
                         mobs_map_y[i] == mobs_target_map_y[i]) {
+                        mob_clr_flag(i, HAS_TARGET);
                         mob_set_flag(i, REACHED_TARGET);
                     }
                 }
@@ -605,6 +630,20 @@ void tick_mobs(void) {
         }
 
         animate_mob(i);
+
+        if (mob_check_handler_flag(i, MOB_COLLISION)) {
+            for (uint8_t collision_idx = 0; collision_idx < MAX_MOBS;
+                 collision_idx++) {
+                if (collision_idx == i) {
+                    continue;
+                }
+                if (check_mob_collision(collision_idx, mobs_bb16_north[i],
+                                        mobs_bb16_south[i], mobs_bb16_east[i],
+                                        mobs_bb16_west[i])) {
+                    mobs_on_mob_collision[i](i, collision_idx);
+                }
+            }
+        }
     }
 
     if (!called_reached_target) {
@@ -651,12 +690,12 @@ void update_mobs(void) {
     }
 }
 
-bool check_mob_collision(uint8_t idx, struct bb16 const bb) {
+bool check_mob_collision(uint8_t idx, uint8_t north, uint8_t south,
+                         uint16_t east, uint16_t west) {
     if (mob_check_flag(idx, IN_USE)) {
-        return (mobs_bb16_north[idx] <= bb.south &&
-                bb.north <= mobs_bb16_south[idx] &&
-                mobs_bb16_west[idx] <= bb.east &&
-                bb.west <= mobs_bb16_east[idx]);
+        return (mobs_bb16_north[idx] <= south &&
+                north <= mobs_bb16_south[idx] && mobs_bb16_west[idx] <= east &&
+                west <= mobs_bb16_east[idx]);
     }
     return false;
 }

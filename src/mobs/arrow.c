@@ -24,16 +24,10 @@ static void on_reached_target(uint8_t idx) { kill_mob(idx); }
 
 static uint8_t arrow_direction[MAX_MOBS];
 
-enum direction arrow_get_direction(uint8_t idx) {
-    return arrow_direction[idx];
-}
+enum direction arrow_get_direction(uint8_t idx) { return arrow_direction[idx]; }
 
-uint8_t create_arrow(uint16_t map_x, uint8_t map_y, enum direction direction) {
-    uint8_t idx = alloc_mob();
-    if (idx == MAX_MOBS) {
-        return MAX_MOBS;
-    }
-
+void create_arrow(uint8_t idx, uint16_t map_x, uint8_t map_y,
+                  enum direction direction) {
     switch (direction) {
         case NORTH:
             mob_set_sprite(idx, &arrow_north);
@@ -63,8 +57,6 @@ uint8_t create_arrow(uint16_t map_x, uint8_t map_y, enum direction direction) {
 
     mob_set_speed(idx, 3, 1);
     arrow_direction[idx] = direction;
-
-    return idx;
 }
 
 static uint8_t blocked_arrow_ttl[MAX_MOBS];

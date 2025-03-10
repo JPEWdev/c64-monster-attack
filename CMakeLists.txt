@@ -83,6 +83,10 @@ list(APPEND SPRITES
     sprites/arrow_north.spm
     sprites/arrow_south.spm
     sprites/arrow_west.spm
+    sprites/bow_east.spm
+    sprites/bow_north.spm
+    sprites/bow_south.spm
+    sprites/bow_west.spm
     sprites/coin.spm
     sprites/flail.spm
     sprites/heart.spm

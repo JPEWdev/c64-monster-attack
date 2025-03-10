@@ -20,6 +20,8 @@
 #define PLAYER_ANIMATION_RATE (10)
 #define WEAPON_ANIMATION_RATE (10)
 
+#define BOW_DRAW_TIME (50)
+
 uint16_t player_map_x;
 uint8_t player_map_y;
 enum direction player_dir = SOUTH;
@@ -35,6 +37,8 @@ static uint8_t player_frame;
 static uint8_t player_animation_counter;
 static uint8_t weapon_frame;
 static uint8_t weapon_animation_counter;
+static uint8_t player_arrow_damage;
+static bool bow_drawing;
 
 static bcd_u16 player_coins;
 bool player_coins_changed;
@@ -55,6 +59,20 @@ static const struct {
     /* SOUTH */ {-8, 15},
     /* EAST */ {18, 2},
     /* WEST */ {-18, 2},
+};
+
+static const int8_t bow_offset_x[] = {
+    /* NORTH */ 8,
+    /* SOUTH */ -6,
+    /* EAST */ 12,
+    /* WEST */ -10,
+};
+
+static const int8_t bow_offset_y[] = {
+    /* NORTH */ -8,
+    /* SOUTH */ 10,
+    /* EAST */ 0,
+    /* WEST */ 0,
 };
 
 #define FLAIL_R (35)
@@ -84,6 +102,8 @@ void init_player(void) {
     player_frame = 0;
     weapon_frame = 0;
     weapon_move_counter = 0;
+    player_arrow_damage = 1;
+    bow_drawing = false;
 }
 
 bool damage_player(uint8_t damage) {
@@ -200,6 +220,12 @@ void draw_player(void) {
                 sprite_pointer = flail_sprite.pointers[weapon_frame];
                 color = COLOR_GRAY2;
                 break;
+
+            case WEAPON_BOW:
+                flags = bow_sprite.flags[player_dir][weapon_frame];
+                sprite_pointer = bow_sprite.pointers[player_dir][weapon_frame];
+                color = COLOR_WHITE;
+                break;
         }
 
         sprite_pointers_shadow[WEAPON_SPRITE_IDX] = sprite_pointer;
@@ -281,6 +307,14 @@ void draw_player(void) {
     VICII_SPRITE_MULTICOLOR = sprite_multicolor;
 }
 
+static void arrow_on_mob_collision(uint8_t idx, uint8_t collision_idx) {
+    if (mob_is_hostile(collision_idx)) {
+        mob_trigger_weapon_collision(collision_idx, player_arrow_damage,
+                                     arrow_get_direction(idx));
+        kill_mob(idx);
+    }
+}
+
 void tick_player(void) {
     if (player_temp_invulnerable) {
         player_temp_invulnerable--;
@@ -300,7 +334,8 @@ void tick_player(void) {
 #pragma clang loop unroll(full)
         for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
             if (mob_has_weapon_collision(idx) &&
-                check_mob_collision(idx, sword_bb16)) {
+                check_mob_collision(idx, sword_bb16.north, sword_bb16.south,
+                                    sword_bb16.east, sword_bb16.west)) {
                 bool hostile = mob_is_hostile(idx);
 
                 switch (current_weapon) {
@@ -326,6 +361,9 @@ void tick_player(void) {
                             }
                         }
                         break;
+
+                    case WEAPON_BOW:
+                        break;
                 }
             }
         }
@@ -339,7 +377,8 @@ void tick_player(void) {
 #pragma clang loop unroll(full)
     for (uint8_t idx = 0; idx < MAX_MOBS; idx++) {
         if (mob_has_player_collision(idx) &&
-            check_mob_collision(idx, player_bb16)) {
+            check_mob_collision(idx, player_bb16.north, player_bb16.south,
+                                player_bb16.east, player_bb16.west)) {
             mob_trigger_player_collision(idx);
         }
     }
@@ -351,7 +390,22 @@ void tick_player(void) {
         uint8_t m = read_joystick_2();
         if (m & _BV(JOYSTICK_FIRE_BIT)) {
             if (weapon_state == WEAPON_AWAY) {
-                weapon_state = WEAPON_VISIBLE;
+                switch (current_weapon) {
+                    case WEAPON_SWORD:
+                    case WEAPON_FLAIL:
+                        weapon_state = WEAPON_VISIBLE;
+                        break;
+
+                    case WEAPON_BOW:
+                        if (alloc_mob_idx(PLAYER_PROJECTILE_MOB_IDX)) {
+                            create_arrow(PLAYER_PROJECTILE_MOB_IDX,
+                                         player_map_x, player_map_y,
+                                         player_dir);
+                            bow_drawing = true;
+                            weapon_state = WEAPON_VISIBLE;
+                        }
+                        break;
+                }
             }
             if (m & _BV(JOYSTICK_UP_BIT)) {
                 move_delta_y -= PLAYER_SPEED / 2;
@@ -367,6 +421,46 @@ void tick_player(void) {
             }
         } else {
             uint8_t new_dir = DIRECTION_COUNT;
+            if (weapon_state == WEAPON_VISIBLE) {
+                switch (current_weapon) {
+                    case WEAPON_SWORD:
+                    case WEAPON_FLAIL:
+                        break;
+
+                    case WEAPON_BOW:
+                        if (weapon_move_counter >= BOW_DRAW_TIME) {
+                            mob_set_mob_collision_handler(
+                                PLAYER_PROJECTILE_MOB_IDX,
+                                arrow_on_mob_collision);
+                            switch (player_dir) {
+                                case NORTH:
+                                    mob_set_target(PLAYER_PROJECTILE_MOB_IDX,
+                                                   player_map_x, 0);
+                                    break;
+
+                                case SOUTH:
+                                    mob_set_target(PLAYER_PROJECTILE_MOB_IDX,
+                                                   player_map_x,
+                                                   MAP_HEIGHT_PX - 1);
+                                    break;
+
+                                case EAST:
+                                    mob_set_target(PLAYER_PROJECTILE_MOB_IDX,
+                                                   MAP_WIDTH_PX - 1,
+                                                   player_map_y);
+                                    break;
+
+                                case WEST:
+                                    mob_set_target(PLAYER_PROJECTILE_MOB_IDX, 0,
+                                                   player_map_y);
+                                    break;
+                            }
+                        } else {
+                            kill_mob(PLAYER_PROJECTILE_MOB_IDX);
+                        }
+                        break;
+                }
+            }
             weapon_state = WEAPON_AWAY;
 
             if (m & _BV(JOYSTICK_UP_BIT)) {
@@ -540,6 +634,44 @@ void tick_player(void) {
                     }
                 }
                 break;
+
+            case WEAPON_BOW: {
+                max_frames = 0;
+                uint8_t y;
+                uint16_t x;
+                if (weapon_move_counter < BOW_DRAW_TIME) {
+                    weapon_move_counter++;
+                    switch (player_dir) {
+                        case NORTH:
+                            x = player_map_x;
+                            y = player_map_y -
+                                ((BOW_DRAW_TIME - weapon_move_counter) >> 1);
+                            break;
+                        case SOUTH:
+                            x = player_map_x;
+                            y = player_map_y +
+                                ((BOW_DRAW_TIME - weapon_move_counter) >> 1);
+                            break;
+                        case EAST:
+                            x = player_map_x +
+                                ((BOW_DRAW_TIME - weapon_move_counter) >> 1);
+                            y = player_map_y;
+                            break;
+                        case WEST:
+                            x = player_map_x -
+                                ((BOW_DRAW_TIME - weapon_move_counter) >> 1);
+                            y = player_map_y;
+                            break;
+                    }
+                } else {
+                    x = player_map_x;
+                    y = player_map_y;
+                }
+                mob_set_position(PLAYER_PROJECTILE_MOB_IDX, x, y);
+                weapon_x = player_get_x() + bow_offset_x[player_dir];
+                weapon_y = player_get_y() + bow_offset_y[player_dir];
+                break;
+            }
         }
         if (weapon_frame >= max_frames) {
             weapon_frame = 0;

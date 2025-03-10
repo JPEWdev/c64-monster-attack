@@ -20,6 +20,7 @@ enum weapon_state {
 enum weapon {
     WEAPON_SWORD,
     WEAPON_FLAIL,
+    WEAPON_BOW,
 };
 
 #define WEAPON_SPRITE_IDX (0)

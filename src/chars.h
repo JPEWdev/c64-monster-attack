@@ -13,6 +13,9 @@
 #define BOW_LEFT_CHAR (0x07)
 #define BOW_RIGHT_CHAR (0x08)
 
+#define ARROW_LEFT_CHAR (0x09)
+#define ARROW_RIGHT_CHAR (0x0A)
+
 #define BLANK_CHAR (0x20)
 
 #define SHORE_EAST_CHAR (0x73)

@@ -5,6 +5,10 @@
 
 #include <cbm.h>
 
+#include "bow_east.spm.h"
+#include "bow_north.spm.h"
+#include "bow_south.spm.h"
+#include "bow_west.spm.h"
 #include "flail.spm.h"
 #include "player_attack_east.spm.h"
 #include "player_attack_north.spm.h"
@@ -85,3 +89,25 @@ const struct direction_sprite sword_sprite = {
 };
 
 const struct sprite flail_sprite = FLAIL_SPRITE;
+
+const struct direction_sprite bow_sprite = {
+    {
+        BOW_NORTH_NUM_FRAMES,
+        BOW_SOUTH_NUM_FRAMES,
+        BOW_EAST_NUM_FRAMES,
+        BOW_WEST_NUM_FRAMES,
+    },
+    {
+        bow_north_pointers,
+        bow_south_pointers,
+        bow_east_pointers,
+        bow_west_pointers,
+    },
+    {
+        bow_north_flags,
+        bow_south_flags,
+        bow_east_flags,
+        bow_west_flags,
+    },
+};
+
