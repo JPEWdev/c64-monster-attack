@@ -178,7 +178,7 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/syms2labels.py ${CMAKE_PROJECT_NAME}.sym ${CMAKE_PROJECT_NAME}-debug.ll --break main
+    COMMAND ${PYTHON3} ${CMAKE_SOURCE_DIR}/scripts/syms2labels.py ${CMAKE_PROJECT_NAME}.sym ${CMAKE_PROJECT_NAME}-debug.ll --break _start
     DEPENDS ${CMAKE_PROJECT_NAME}.sym ${CMAKE_SOURCE_DIR}/scripts/syms2labels.py
     OUTPUT ${CMAKE_PROJECT_NAME}-debug.ll
     VERBATIM
