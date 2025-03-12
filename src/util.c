@@ -156,6 +156,20 @@ uint8_t u16_to_string(uint16_t v, char str[5]) {
     return num_chars;
 }
 
+uint8_t fast_strlen(char* s) {
+    uint8_t i;
+    for (i = 0; s[i]; i++);
+    return i;
+}
+
+void pad_string(char* str, uint8_t size, uint8_t offset) {
+    for (uint8_t i = offset; i < size - 1; i++) {
+        str[i] = ' ';
+    }
+
+    str[size - 1] = '\0';
+}
+
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y) {
     int8_t delta_x = from_x - to_x;

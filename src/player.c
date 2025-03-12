@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "bcd.h"
+#include "chars.h"
 #include "input.h"
 #include "map.h"
 #include "mobs.h"
@@ -149,6 +150,19 @@ void heal_player(uint8_t health) {
     player_health_changed = true;
 }
 
+void player_get_health_str(char s[PLAYER_HEALTH_STR_LEN]) {
+    for (uint8_t i = 0; i < PLAYER_MAX_HEALTH; i += 2) {
+        if (player_health <= i) {
+            s[i / 2] = BLANK_CHAR;
+        } else if (player_health == i + 1) {
+            s[i / 2] = HALF_HEART_CHAR;
+        } else {
+            s[i / 2] = HEART_CHAR;
+        }
+    }
+    s[PLAYER_HEALTH_STR_LEN - 1] = '\0';
+}
+
 uint16_t player_get_x(void) {
     return player_map_x + MAP_OFFSET_X_PX - SPRITE_WIDTH_PX / 2;
 }
@@ -173,6 +187,14 @@ void player_add_coins(bcd_u16 coins) {
         return;
     }
     player_coins = bcd_add_u16(player_coins, coins);
+    player_coins_changed = true;
+}
+
+void player_sub_coins(bcd_u16 coins) {
+    if (!coins) {
+        return;
+    }
+    player_coins = bcd_sub_u16(player_coins, coins);
     player_coins_changed = true;
 }
 

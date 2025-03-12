@@ -20,6 +20,7 @@
 #include "player.h"
 #include "reg.h"
 #include "sprite.h"
+#include "store.h"
 #include "tick.h"
 
 _Static_assert(MAX_RASTER_CMDS == MAX_MOBS - 6 + 2,
@@ -504,26 +505,6 @@ static void create_done_raster_cmd(void) {
     raster_set_vicii_ctrl_2(idx, DEFAULT_VICII_CTRL_2);
 }
 
-#ifdef DEBUG
-static uint16_t get_raster(void) {
-    return (VICII_CTRL_1 & _BV(VICII_RST8_BIT)) << 1 | VICII_RASTER;
-}
-#endif
-
-static uint8_t fast_strlen(char* s) {
-    uint8_t i;
-    for (i = 0; s[i]; i++);
-    return i;
-}
-
-static void pad_string(char* str, uint8_t size, uint8_t offset) {
-    for (uint8_t i = offset; i < size - 1; i++) {
-        str[i] = ' ';
-    }
-
-    str[size - 1] = '\0';
-}
-
 static void draw_current_weapon(void) {
     switch (player_get_weapon()) {
         case WEAPON_SWORD:
@@ -576,20 +557,12 @@ static bool update_score_string(void) {
 }
 
 static bool draw_health = false;
-static char health_string_buf[(PLAYER_MAX_HEALTH / 2) + 1];
+static char health_string_buf[PLAYER_HEALTH_STR_LEN];
 static bool update_health_string(void) {
     if (!player_health_changed) {
         return false;
     }
-    for (uint8_t i = 0; i < PLAYER_MAX_HEALTH; i += 2) {
-        if (player_health <= i) {
-            health_string_buf[i / 2] = ' ';
-        } else if (player_health == i + 1) {
-            health_string_buf[i / 2] = HALF_HEART_CHAR;
-        } else {
-            health_string_buf[i / 2] = HEART_CHAR;
-        }
-    }
+    player_get_health_str(health_string_buf);
     player_health_changed = false;
     draw_health = true;
     return true;
@@ -610,39 +583,62 @@ static bool update_raster_avg_string(uint16_t raster_avg, bool update) {
 #define update_raster_avg_string(avg, update) (false)
 #endif
 
+static void full_redraw(void) {
+    DISABLE_INTERRUPTS() {
+        VICII_CTRL_1 &= ~_BV(VICII_DEN_BIT);
+
+        fill_char(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,
+                  BLANK_CHAR);
+        fill_color(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,
+                   COLOR_BLACK);
+        draw_background(current_screen);
+
+        score_updated = true;
+        player_health_changed = true;
+        player_coins_changed = true;
+
+        fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
+                   HEALTH_X_TILE + sizeof(health_string_buf) - 1, HEALTH_Y_TILE,
+                   COLOR_RED);
+
+        fill_color(COIN_X_TILE, COIN_Y_TILE,
+                   COIN_X_TILE + sizeof(coin_string_buf) - 1, COIN_Y_TILE,
+                   COLOR_GREEN);
+
+        fill_color(SCORE_TEXT_X - sizeof(score_string_buf), SCORE_TEXT_Y,
+                   SCORE_TEXT_X - 1, SCORE_TEXT_Y, COLOR_WHITE);
+
+#ifdef DEBUG
+        fill_color(SCORE_TEXT_X - sizeof(raster_avg_str), SCORE_TEXT_Y + 1,
+                   SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
+#endif
+
+        put_char_xy(WEAPON_X_TILE, WEAPON_Y_TILE, '(');
+        set_color(WEAPON_X_TILE, WEAPON_Y_TILE, COLOR_BLUE);
+        put_char_xy(WEAPON_X_TILE + 3, WEAPON_Y_TILE, ')');
+        set_color(WEAPON_X_TILE + 3, WEAPON_Y_TILE, COLOR_BLUE);
+        draw_current_weapon();
+
+        prepare_raster_cmds();
+        create_status_raster_cmd();
+        create_done_raster_cmd();
+        finish_raster_cmds();
+        VICII_CTRL_1 |= _BV(VICII_DEN_BIT);
+    }
+
+    frame_wait();
+}
+
 void game_loop(void) {
-    memset(health_string_buf, ' ', sizeof(health_string_buf) - 1);
-    health_string_buf[sizeof(health_string_buf) - 1] = '\0';
-
     score = 0;
-    score_updated = true;
-    player_health_changed = true;
-    player_coins_changed = true;
 
-    fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
-               HEALTH_X_TILE + sizeof(health_string_buf) - 1, HEALTH_Y_TILE,
-               COLOR_RED);
+    full_redraw();
 
-    fill_color(COIN_X_TILE, COIN_Y_TILE,
-               COIN_X_TILE + sizeof(coin_string_buf) - 1, COIN_Y_TILE,
-               COLOR_GREEN);
-
-    fill_color(SCORE_TEXT_X - sizeof(score_string_buf), SCORE_TEXT_Y,
-               SCORE_TEXT_X - 1, SCORE_TEXT_Y, COLOR_WHITE);
+    uint8_t delay_frame = 0;
 
 #ifdef DEBUG
     uint16_t raster_avg = 0;
-    fill_color(SCORE_TEXT_X - sizeof(raster_avg_str), SCORE_TEXT_Y + 1,
-               SCORE_TEXT_X - 1, SCORE_TEXT_Y + 1, COLOR_CYAN);
 #endif
-
-    put_char_xy(WEAPON_X_TILE, WEAPON_Y_TILE, '(');
-    set_color(WEAPON_X_TILE, WEAPON_Y_TILE, COLOR_BLUE);
-    put_char_xy(WEAPON_X_TILE + 3, WEAPON_Y_TILE, ')');
-    set_color(WEAPON_X_TILE + 3, WEAPON_Y_TILE, COLOR_BLUE);
-    draw_current_weapon();
-
-    uint8_t delay_frame = 0;
 
     while (true) {
         // Wait for next frame interrupt
@@ -693,9 +689,7 @@ void game_loop(void) {
         DISABLE_INTERRUPTS() {
             prepare_raster_cmds();
             create_status_raster_cmd();
-        }
-        draw_mobs();
-        DISABLE_INTERRUPTS() {
+            draw_mobs();
             create_done_raster_cmd();
             finish_raster_cmds();
         }
@@ -761,6 +755,15 @@ void game_loop(void) {
             case KEY_F5:
                 player_set_weapon(WEAPON_BOW);
                 draw_current_weapon();
+                break;
+
+            case KEY_S:
+                store_reset();
+                store_set_item(STORE_ITEM_HEAL, BCD8(1));
+                store_set_item(STORE_ITEM_MAX_HEALTH, BCD8(10));
+                store_show();
+
+                full_redraw();
                 break;
         }
     }
@@ -830,6 +833,9 @@ int main() {
     create_done_raster_cmd();
     finish_raster_cmds();
 
+    memset(health_string_buf, ' ', sizeof(health_string_buf) - 1);
+    health_string_buf[sizeof(health_string_buf) - 1] = '\0';
+
     is_ntsc = (detect_video() != VIDEO_PAL_6596);
 
     enable_interrupts();
@@ -842,12 +848,6 @@ int main() {
         // Hide all sprites
         VICII_SPRITE_ENABLE = 0;
 
-        fill_char(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,
-                  BLANK_CHAR);
-        fill_color(0, 0, SCREEN_WIDTH_TILE - 1, SCREEN_HEIGHT_TILE - 1,
-                   COLOR_BLACK);
-        draw_background(current_screen);
-
         player_map_x = PLAYER_START_X_QUAD * QUAD_WIDTH_PX + QUAD_WIDTH_PX / 2;
         player_map_y =
             PLAYER_START_Y_QUAD * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
@@ -855,6 +855,8 @@ int main() {
         player_health = 6;
         player_full_health = 6;
         player_set_coins(0);
+
+        full_redraw();
 
         init_player();
 

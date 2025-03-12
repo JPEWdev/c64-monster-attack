@@ -59,6 +59,7 @@ void finish_raster_cmds(void) {
     vicii_raster_next[raster_cmd_idx] = first_line;
     raster_flags[raster_cmd_idx] |= RASTER_LAST;
     raster_cmd_idx = 0;
+    VICII_INTERRUPT_ENABLE |= _BV(VICII_RST_BIT);
 }
 
 uint8_t alloc_raster_cmd(uint8_t raster_line) {

@@ -9,8 +9,11 @@
 
 struct map_screen;
 
+uint16_t get_raster(void);
+
 void put_char_xy(uint8_t x, uint8_t y, uint8_t c);
 void put_string_xy(uint8_t x, uint8_t y, char const* c);
+void put_string_xy_color(uint8_t x, uint8_t y, char const *c, uint8_t color);
 void set_color(uint8_t x, uint8_t y, uint8_t color);
 void fill_char(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t c);
 void fill_color(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);

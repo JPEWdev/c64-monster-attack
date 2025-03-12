@@ -27,6 +27,7 @@ enum weapon {
 #define PLAYER_SPRITE_IDX (1)
 
 #define PLAYER_MAX_HEALTH (20)
+#define PLAYER_HEALTH_STR_LEN ((PLAYER_MAX_HEALTH / 2) + 1)
 
 #define PLAYER_COLOR (COLOR_GREEN)
 #define PLAYER_HIT_COLOR_1 (COLOR_WHITE)
@@ -52,7 +53,9 @@ uint8_t player_get_quad_y(void);
 bcd_u16 player_get_coins(void);
 void player_set_coins(bcd_u16 coins);
 void player_add_coins(bcd_u16 coins);
+void player_sub_coins(bcd_u16 coins);
 void player_set_weapon(enum weapon weapon);
+void player_get_health_str(char s[PLAYER_HEALTH_STR_LEN]);
 enum weapon player_get_weapon(void);
 uint16_t player_weapon_get_x(void);
 uint8_t player_weapon_get_y(void);

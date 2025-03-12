@@ -64,6 +64,7 @@ list(APPEND SOURCES
     src/player-sprite.c
     src/screen.S
     src/sprite.c
+    src/store.c
     src/isr-handler.S
     src/isr.c
     src/main.c

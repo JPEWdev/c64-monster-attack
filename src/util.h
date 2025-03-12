@@ -17,11 +17,11 @@
 #define disable_interrupts() asm volatile("sei")
 #define enable_interrupts() asm volatile("cli")
 
-#define swap(a, b)        \
-    do {                  \
+#define swap(a, b)          \
+    do {                    \
         typeof(a) temp = a; \
-        (a) = (b);        \
-        (b) = temp;       \
+        (a) = (b);          \
+        (b) = temp;         \
     } while (0)
 
 enum direction {
@@ -64,6 +64,9 @@ bool bb16_intersect(struct bb16 const* a, struct bb16 const* b);
 
 void int_to_string(int16_t i, char str[7]);
 uint8_t u16_to_string(uint16_t i, char str[5]);
+
+uint8_t fast_strlen(char* s);
+void pad_string(char* str, uint8_t size, uint8_t offset);
 
 enum direction dir_from(uint16_t from_x, uint16_t from_y, uint16_t to_x,
                         uint16_t to_y);
