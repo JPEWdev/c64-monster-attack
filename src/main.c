@@ -46,6 +46,7 @@ _Static_assert(MAX_RASTER_CMDS == MAX_MOBS - 6 + 2,
 #define PLAYER_START_Y_QUAD (MAP_HEIGHT_QUAD / 2)
 
 extern const uint8_t game_tiles[256];
+extern const uint8_t current_file_dn;
 
 #ifdef DEBUG
 #define DEBUG_COLOR(_c)          \
@@ -765,12 +766,12 @@ void game_loop(void) {
     }
 }
 
-void load_data(char const* fn, uint8_t* dest) {
+void load_data(uint8_t device_num, char const* fn, uint8_t* dest) {
     uint8_t buffer[256];
 
     cbm_k_clall();
     cbm_k_setnam(fn);
-    cbm_k_setlfs(15, 8, 2);
+    cbm_k_setlfs(15, device_num, 2);
     cbm_k_open();
     cbm_k_chkin(15);
     uint8_t i = 0;
@@ -794,7 +795,7 @@ int main() {
     // Blank screen while setting up
     VICII_CTRL_1 &= ~_BV(VICII_DEN_BIT);
 
-    load_data("GRAPHICS", &video_base);
+    load_data(current_file_dn ? current_file_dn : 8, "GRAPHICS", &video_base);
 
     disable_interrupts();
 

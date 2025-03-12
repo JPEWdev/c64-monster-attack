@@ -8,6 +8,8 @@
 __basic_zp_start = 0x0002;
 __basic_zp_end = 0x0090;
 
+current_file_dn = 0x00ba;
+
 MEMORY {
     screen : ORIGIN = 0x400, LENGTH = 0x3f0
     ram (rw) : ORIGIN = 0x0801, LENGTH = 0xA7FF
