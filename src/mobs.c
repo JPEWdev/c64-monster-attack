@@ -692,7 +692,7 @@ void update_mobs(void) {
 
 bool check_mob_collision(uint8_t idx, uint8_t north, uint8_t south,
                          uint16_t east, uint16_t west) {
-    if (mob_check_flag(idx, IN_USE)) {
+    if (mob_check_flag(idx, IN_USE) && mobs_damage_counter[idx] == 0) {
         return (mobs_bb16_north[idx] <= south &&
                 north <= mobs_bb16_south[idx] && mobs_bb16_west[idx] <= east &&
                 west <= mobs_bb16_east[idx]);
