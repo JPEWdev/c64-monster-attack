@@ -852,7 +852,6 @@ int main() {
         player_map_y =
             PLAYER_START_Y_QUAD * QUAD_HEIGHT_PX + QUAD_HEIGHT_PX / 2;
         player_dir = SOUTH;
-        player_weapon_damage = 1;
         player_health = 6;
         player_full_health = 6;
         player_set_coins(0);

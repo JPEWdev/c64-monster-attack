@@ -36,7 +36,6 @@ enum weapon {
 extern uint16_t player_map_x;
 extern uint8_t player_map_y;
 extern enum direction player_dir;
-extern uint8_t player_weapon_damage;
 extern uint8_t player_health;
 extern bool player_health_changed;
 extern uint8_t player_full_health;

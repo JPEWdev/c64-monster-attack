@@ -25,7 +25,6 @@
 uint16_t player_map_x;
 uint8_t player_map_y;
 enum direction player_dir = SOUTH;
-uint8_t player_weapon_damage;
 uint8_t player_health;
 bool player_health_changed;
 uint8_t player_full_health;
@@ -37,6 +36,8 @@ static uint8_t player_frame;
 static uint8_t player_animation_counter;
 static uint8_t weapon_frame;
 static uint8_t weapon_animation_counter;
+static uint8_t player_sword_damage;
+static uint8_t player_flail_damage;
 static uint8_t player_arrow_damage;
 static bool bow_drawing;
 
@@ -49,7 +50,7 @@ static uint16_t weapon_x = 0;
 static uint8_t weapon_y = 0;
 static uint8_t weapon_move_counter = 0;
 static uint8_t flail_timer;
-static uint8_t flail_damage;
+static uint8_t flail_speed;
 
 static const struct {
     int8_t x;
@@ -103,6 +104,8 @@ void init_player(void) {
     weapon_frame = 0;
     weapon_move_counter = 0;
     player_arrow_damage = 1;
+    player_sword_damage = 1;
+    player_flail_damage = 1;
     bow_drawing = false;
 }
 
@@ -340,7 +343,7 @@ void tick_player(void) {
 
                 switch (current_weapon) {
                     case WEAPON_SWORD:
-                        mob_trigger_weapon_collision(idx, player_weapon_damage,
+                        mob_trigger_weapon_collision(idx, player_sword_damage,
                                                      player_dir);
                         if (hostile) {
                             weapon_state = WEAPON_ATTACKED;
@@ -349,14 +352,14 @@ void tick_player(void) {
 
                     case WEAPON_FLAIL:
                         mob_trigger_weapon_collision(
-                            idx, flail_damage,
+                            idx, player_flail_damage + flail_speed - 1,
                             dir_from(player_map_x, player_map_y,
                                      mob_get_map_x(idx), mob_get_map_y(idx)));
 
                         if (hostile) {
-                            flail_damage--;
+                            flail_speed--;
                             flail_timer = 0;
-                            if (!flail_damage) {
+                            if (!flail_speed) {
                                 weapon_state = WEAPON_ATTACKED;
                             }
                         }
@@ -538,7 +541,7 @@ void tick_player(void) {
             case WEAPON_FLAIL:
                 max_frames = flail_sprite.num_frames;
                 if (weapon_move_counter < 0x80) {
-                    flail_damage = 1;
+                    flail_speed = 1;
                     flail_timer = 0;
                     switch (player_dir) {
                         case NORTH:
@@ -611,7 +614,7 @@ void tick_player(void) {
                         weapon_x = player_get_x() - flail_table[x_idx];
                     }
 
-                    switch (flail_damage) {
+                    switch (flail_speed) {
                         case 1:
                             weapon_move_counter++;
                             flail_timer++;
@@ -627,9 +630,9 @@ void tick_player(void) {
                             break;
                     }
 
-                    if (flail_damage < 3 &&
+                    if (flail_speed < 3 &&
                         flail_timer >= ARRAY_SIZE(flail_table) * 2) {
-                        flail_damage++;
+                        flail_speed++;
                         flail_timer = 0;
                     }
                 }
