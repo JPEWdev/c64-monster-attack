@@ -36,6 +36,11 @@ void put_string_xy(uint8_t x, uint8_t y, char const *c) {
     }
 }
 
+void put_char_xy_color(uint8_t x, uint8_t y, uint8_t c, uint8_t color) {
+    put_char_xy(x, y, c);
+    set_color(x, y, color);
+}
+
 void put_string_xy_color(uint8_t x, uint8_t y, char const *c, uint8_t color) {
     put_string_xy(x, y, c);
     fill_color(x, y, x + strlen(c), y, color);

@@ -97,8 +97,11 @@ void store_show(void) {
                             COLOR_GREEN);
 
         player_get_health_str(player_health_buf);
-        put_string_xy_color(HEALTH_X_TILE, HEALTH_Y_TILE, player_health_buf,
+        put_char_xy_color(HEALTH_X_TILE, HEALTH_Y_TILE, '(', COLOR_WHITE);
+        put_string_xy_color(HEALTH_X_TILE + 1, HEALTH_Y_TILE, player_health_buf,
                             COLOR_RED);
+        put_char_xy_color(HEALTH_X_TILE + 1 + player_full_health / 2,
+                          HEALTH_Y_TILE, ')', COLOR_WHITE);
 
         for (enum store_item i = 0; i < STORE_ITEM_COUNT; i++) {
             char price_buf[6];

@@ -597,9 +597,12 @@ static void full_redraw(void) {
         player_health_changed = true;
         player_coins_changed = true;
 
-        fill_color(HEALTH_X_TILE, HEALTH_Y_TILE,
-                   HEALTH_X_TILE + sizeof(health_string_buf) - 1, HEALTH_Y_TILE,
-                   COLOR_RED);
+        put_char_xy_color(HEALTH_X_TILE, HEALTH_Y_TILE, '(', COLOR_WHITE);
+        fill_color(HEALTH_X_TILE + 1, HEALTH_Y_TILE,
+                   HEALTH_X_TILE + 1 + sizeof(health_string_buf) - 1,
+                   HEALTH_Y_TILE, COLOR_RED);
+        put_char_xy_color(HEALTH_X_TILE + 1 + player_full_health / 2,
+                          HEALTH_Y_TILE, ')', COLOR_WHITE);
 
         fill_color(COIN_X_TILE, COIN_Y_TILE,
                    COIN_X_TILE + sizeof(coin_string_buf) - 1, COIN_Y_TILE,
@@ -671,7 +674,9 @@ void game_loop(void) {
                           SCORE_TEXT_Y, score_string_buf);
             draw_score = false;
         } else if (draw_health) {
-            put_string_xy(HEALTH_X_TILE, HEALTH_Y_TILE, health_string_buf);
+            put_string_xy(HEALTH_X_TILE + 1, HEALTH_Y_TILE, health_string_buf);
+            put_char_xy_color(HEALTH_X_TILE + 1 + player_full_health / 2,
+                              HEALTH_Y_TILE, ')', COLOR_WHITE);
             draw_health = false;
         }
 #ifdef DEBUG
