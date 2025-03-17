@@ -13,8 +13,24 @@ The D64 disk image for the latest release can be downloaded from the
 ## Game play
 
 Move around with Joysick 2, use the fire button to extend your sword. Destroy
-the skeletons and they might drop coins (which are currently useless) or hearts
-(which heal you). Try to get the highest score before running out of health.
+the skeletons and they might drop coins or hearts (which heal you). Try to get
+the highest score before running out of health.
+
+You have a choice of 3 weapons, which can be selected using the function keys
+
+**F1** - Sword. Does damage by stabbing enemies when the fire button is
+pressed.
+
+**F3** - Flail. Extends out in the direction the player is facing and starts
+spinning around while the fire button is held. The faster it spins, the more
+damage it does on contact with an enemy. If it collides with too many enemies
+it will be withdrawn and need to be re-deployed.
+
+**F5** - Bow and arrow. Pressing and holding the fire button will start drawing
+back an arrow. Once it is fully drawn back, releasing the button will loose the
+arrow.
+
+Pressing the **s** key will take you to the store where you can spend coins
 
 ## Building from Source
 
@@ -86,6 +102,4 @@ still like to add:
 
  1. Level progression where the levels get harder
  2. More weapons
- 3. A store where coins can be spent for power ups (better weapons, more
-    health, etc.)
- 4. Other enemies
+ 3. Other enemies
