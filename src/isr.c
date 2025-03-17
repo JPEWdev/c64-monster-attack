@@ -65,6 +65,7 @@ void finish_raster_cmds(void) {
 uint8_t alloc_raster_cmd(uint8_t raster_line) {
     if (raster_cmd_idx == 0xFF) {
         VICII_RASTER = raster_line;
+        VICII_CTRL_1 &= ~_BV(VICII_RST8_BIT);
         first_line = raster_line;
     } else {
         vicii_raster_next[raster_cmd_idx] = raster_line;

@@ -622,11 +622,11 @@ static void full_redraw(void) {
         set_color(WEAPON_X_TILE + 3, WEAPON_Y_TILE, COLOR_BLUE);
         draw_current_weapon();
 
+        VICII_CTRL_1 |= _BV(VICII_DEN_BIT);
         prepare_raster_cmds();
         create_status_raster_cmd();
         create_done_raster_cmd();
         finish_raster_cmds();
-        VICII_CTRL_1 |= _BV(VICII_DEN_BIT);
     }
 
     frame_wait();
